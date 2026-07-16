@@ -20,13 +20,14 @@ class TokenType(Enum):
     CCParen = 8  # }
     SOParen = 9  # [
     SCParen = 10 # ]
+    
 def tokenize(program):
     state = State.Start
     tokens = []
     value  = ""
     ttype  = TokenType.Lit
 
-    i = 0]
+    i = 0
     
     while (i< len(program)):
         c = program[i]
@@ -96,9 +97,41 @@ def tokenize(program):
         tokens.append((ttype,value))
     return tokens
 
-program = "1 2 +"
+def compile_tokens(tokens,file_path):
+    with open(file_path,"w") as file:
+        #Header
+        file.write("// Header\n")
+        file.write("#include <stdio.h>\n")
+        file.write("#include \"stack.h\"\n")
+        file.write("\nint main(){\n")
+        file.write("\tStack s; \n\tstack_init(&s);\n")
+
+        for token in tokens:
+            match token[0]:
+                case TokenType.Int:
+                    file.write(f"\t//PUSH INT `{token[1]}`\n")
+                    file.write(f"\tpush_int(&s,{token[1]});\n")
+                case TokenType.Str:
+                    file.write(f"\t//PUSH STR `\"{token[1]}\"`\n")
+                    file.write(f"\tpush_string(&s,\"{token[1]}\");\n")
+                case TokenType.Lit:
+                    match token[1]:
+                        case "+":
+                            file.write(f"\t//PLUS\n")
+                            file.write(f"\top_add(&s);\n")
+                        case "print":
+                            file.write(f"\t//PRINT\n")
+                            file.write(f"\top_print(&s);\n")
+        file.write("\treturn 0;\n")
+        file.write("};\n")
+program = """1 5 +
+\"%d\\n\" print
+\"Hello world!\\n\" print
+"""
 
 tokens = tokenize(program)
 
 for token in tokens:
     print(token)
+
+compile_tokens(tokens,".\\build\\output.c")

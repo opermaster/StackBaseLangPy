@@ -1,6 +1,5 @@
+output.c:
+	python .\src\main.py
 
-script.c: main.py
-	python main.py
-
-script: script.c
-	gcc -o script script.c
+output: output.c
+	gcc .\build\stack.c -o .\build\output .\build\output.c &.\build\output
