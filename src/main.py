@@ -20,11 +20,12 @@ class TokenType(Enum):
     CCParen = 8  # }
     SOParen = 9  # [
     SCParen = 10 # ]
+    
 TYPE_MAP = {
-    "int":    ("TYPE_INT",    "0"),
-    "float":  ("TYPE_FLOAT",  "0.0f"),
-    "string": ("TYPE_STRING", "NULL"),
-    "bool":   ("TYPE_BOOL",   "false"),
+    "int":    ("TYPE_INT",    "0",     "i"),
+    "float":  ("TYPE_FLOAT",  "0.0f",  "f"),
+    "string": ("TYPE_STRING", "NULL",  "s"),
+    "bool":   ("TYPE_BOOL",   "false" ,"b"),
 }
 
 def tokenize(program):
@@ -50,6 +51,21 @@ def tokenize(program):
                 elif c.isspace() or c=='\0'or c=='\n':
                     i+=1
                     continue
+                elif c=='[':
+                    ttype = TokenType.SOParen
+                    value +=c
+                    state = State.Start
+                    tokens.append((ttype,value))
+                    value = ""
+                    ttype = TokenType.Lit
+                elif c==']':
+                    ttype = TokenType.SCParen
+                    value +=c
+                    state = State.Start
+                    tokens.append((ttype,value))
+                    value = ""
+                    ttype = TokenType.Lit
+                
                 else:
                     ttype = TokenType.Lit
                     value += c
@@ -68,6 +84,12 @@ def tokenize(program):
                     tokens.append((ttype,value))
                     value = ""
                     ttype = TokenType.Lit
+                else:
+                    state = State.Start
+                    tokens.append((ttype,value))
+                    value = ""
+                    ttype = TokenType.Lit
+                    i-=1
                     
             case State.InFloat:
                 if c.isdigit():
@@ -85,6 +107,12 @@ def tokenize(program):
                     tokens.append((ttype,value))
                     value = ""
                     ttype = TokenType.Lit
+                elif c in "[]{}()":
+                    state = State.Start
+                    tokens.append((ttype,value))
+                    value = ""
+                    ttype = TokenType.Lit
+                    i-=1
                 else:
                     value +=c
                     
@@ -105,14 +133,17 @@ def tokenize(program):
 
 def compile_tokens(tokens,file_path):
     declared_vars = set()
+    var_sizes = {}      
+    last_var_name = None
     with open(file_path,"w") as file:
-        #Header
         file.write("// Header\n")
         file.write("#include <stdio.h>\n")
         file.write("#include \"stack.h\"\n")
+        file.write("#include <stdlib.h>\n")
         file.write("\nint main(){\n")
         file.write("\tStack s; \n\tstack_init(&s);\n")
         file.write("// BODY\n")
+        
         i = 0
         
         while(i< len(tokens)):
@@ -141,19 +172,39 @@ def compile_tokens(tokens,file_path):
                         case "*":
                             file.write(f"\t//MUL\n")
                             file.write(f"\top_mul(&s);\n")
-                        case "print":
-                            file.write(f"\t//PRINT\n")
-                            file.write(f"\top_print(&s);\n")
+                        case "printf":
+                            file.write(f"\t//PRINTF\n")
+                            file.write(f"\top_printf(&s);\n")
+                        case "scanf":
+                            file.write(f"\t//SCANF\n")
+                            file.write(f"\top_scanf(&s);\n")
                         case "let":
                             type_name = tokens[i + 1][1]
                             var_name = tokens[i + 2][1]
-                        
+                            isarray = False
+                            c_type_enum, default_val, field = TYPE_MAP[type_name]
+                            
                             if type_name not in TYPE_MAP:
                                 raise SyntaxError(f"Unknown type '{type_name}' in let")
+                            if tokens[i+3][0]==TokenType.SOParen:
+                                isarray = True
+                            if isarray:
+                                if c_type_enum != "TYPE_STRING":
+                                    raise SyntaxError("Now only support for 'string'-arrays (for fgets)")
 
-                            c_type_enum, default_val = TYPE_MAP[type_name]
-                            field = {"TYPE_INT": "i", "TYPE_FLOAT": "f",
-                                     "TYPE_STRING": "s", "TYPE_BOOL": "b"}[c_type_enum]
+                                array_size = int(tokens[i + 4][1])
+
+                                file.write(f"\t//LET {type_name} {var_name}[{array_size}]\n")
+                                file.write(
+                                    f"\tValue {var_name} = (Value){{ .type = TYPE_STRING, "
+                                    f".as.s = malloc({array_size} + 1) }};\n"
+                                )
+                                file.write(f"\t{var_name}.as.s[0] = '\\0';\n")
+
+                                declared_vars.add(var_name)
+                                var_sizes[var_name] = array_size  # buffer size for  "read"
+                                i += 6  # let, type, name, '[', size, ']'
+                                continue
 
                             file.write(f"\t//LET {type_name} {var_name}\n")
                             file.write(
@@ -172,10 +223,21 @@ def compile_tokens(tokens,file_path):
                         case "deref":
                             file.write(f"\t//DEREF\n")
                             file.write(f"\top_deref(&s);\n")
+                        case "fgets":
+                            if last_var_name is None or last_var_name not in var_sizes:
+                                raise SyntaxError("read: before 'fgets' must be variable array ('buf fgets')")
+                            size = var_sizes[last_var_name]
+                            file.write(f"\t//fgets into {last_var_name}\n")
+                            file.write(f"\top_fgets(&s, {size});\n")
                             
-                        case _ if token[1] in declared_vars:
-                            file.write(f"\t//PUSH_PTR {token[1]}\n")
-                            file.write(f"\tpush_ptr(&s, &{token[1]});\n")
+                        case _:
+                            if token[1] in declared_vars:
+                                file.write(f"\t//PUSH_PTR {token[1]}\n")
+                                file.write(f"\tpush_ptr(&s, &{token[1]});\n")
+                                last_var_name = token[1]
+                            else:
+                                raise SyntaxError(f"Unknown literal: `{token[1]}`")
+                            
             i+=1
         file.write("\treturn 0;\n};")
 def compile_file(input_path: str, output_path: str, verbose: bool = False):
@@ -208,4 +270,4 @@ if __name__ == "__main__":
         print("Usage: python compiler.py <input_file> <output_file.c>")
         sys.exit(1)
  
-    compile_file(sys.argv[1], sys.argv[2], verbose=False)
+    compile_file(sys.argv[1], sys.argv[2], verbose=True)

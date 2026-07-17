@@ -1,9 +1,1 @@
-1 5 +
-"%d\n" print
-"Hello world!\n" print
-2 2 *
-"%d\n" print
-10 2 /
-"%d\n" print
-2.22 2 *
-"%f\n" print
+"Hello world!\n" printf

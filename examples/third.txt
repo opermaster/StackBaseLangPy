@@ -6,6 +6,5 @@ let int sum
 2 b store
 a deref b deref + sum store
 
-sum deref
-"%d" print
+sum deref "%d" printf
 

@@ -50,7 +50,9 @@ void push_ptr(Stack* stack, Value* ptr);
 void op_deref(Stack* stack);
 void op_store(Stack* stack);
 
-void op_print(Stack* stack);
+void op_printf(Stack* stack);
+void op_scanf(Stack* stack);
+void op_fgets(Stack* stack, int max_len);
 
 void op_add(Stack* s);
 void op_minus(Stack* s);

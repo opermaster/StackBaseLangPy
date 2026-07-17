@@ -1,0 +1,7 @@
+let int a
+let int b
+let int result
+a b "a = %d b = %d" scanf
+
+a deref b deref + result store
+a deref b deref result deref "a(%d) + b(%d) = %d" printf

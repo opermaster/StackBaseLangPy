@@ -1,4 +1,4 @@
-all: first second third
+all: first second third forth
 
 first.c:
 	python .\src\main.py .\examples\first.txt .\build\first.c
@@ -20,3 +20,15 @@ third.c:
 third: third.c
 	gcc .\lib\stack.c -o .\build\third .\build\third.c  -I .\lib\
 	&.\build\third
+
+forth.c:
+	python .\src\main.py .\examples\forth.txt .\build\forth.c
+
+forth: forth.c
+	gcc .\lib\stack.c -o .\build\forth .\build\forth.c  -I .\lib\
+
+fifth.c:
+	python .\src\main.py .\examples\fifth.txt .\build\fifth.c
+
+fifth: fifth.c
+	gcc .\lib\stack.c -o .\build\fifth .\build\fifth.c  -I .\lib\

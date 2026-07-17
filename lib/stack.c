@@ -1,6 +1,6 @@
 #include "stack.h"
 #include <stdlib.h>
- 
+#include <string.h>
 void stack_init(Stack* stack) {
     stack->sp = 0;
 }
@@ -219,7 +219,7 @@ int count_format_specifiers(const char* fmt) {
     }
     return count;
 }
-void op_print(Stack* stack) {
+void op_printf(Stack* stack) {
     Value fmt = pop(stack);
     if (fmt.type != TYPE_STRING) {
         fprintf(stderr, "op_print: expected a format string on top of stack\n");
@@ -295,5 +295,109 @@ void op_print(Stack* stack) {
             putchar(*p);
             p++;
         }
+    }
+}
+void op_scanf(Stack* stack) {
+    Value fmt = pop(stack);
+    if (fmt.type != TYPE_STRING) {
+        fprintf(stderr, "op_scanf: expected a format string on top of stack\n");
+        exit(1);
+    }
+ 
+    int argc = count_format_specifiers(fmt.as.s);
+    if (argc > 64) {
+        fprintf(stderr, "op_scanf: too many arguments\n");
+        exit(1);
+    }
+ 
+    Value tmp[64];
+    for (int i = 0; i < argc; i++) {
+        tmp[i] = pop(stack);
+    }
+ 
+    Value args[64];
+    for (int i = 0; i < argc; i++) {
+        args[i] = tmp[argc - 1 - i];
+    }
+ 
+    int arg_index = 0;
+    const char* p = fmt.as.s;
+    while (*p) {
+        if (*p == '%' && *(p + 1) != '\0') {
+            char spec = *(p + 1);
+            if (spec == '%') {
+                putchar('%');
+                p += 2;
+                continue;
+            }
+            if (arg_index >= argc) {
+                fprintf(stderr, "op_scanf: not enough arguments for format string\n");
+                exit(1);
+            }
+            Value v = args[arg_index++];
+            if (v.type != TYPE_PTR) {
+                fprintf(stderr, "op_scanf: expected a pointer (variable), got value\n");
+                exit(1);
+            }
+            switch (spec) {
+                case 'd':
+                    if (v.as.ptr->type !=TYPE_INT ){
+                        fprintf(stderr, "op_scanf: %%d expects a *int\n");
+                    }
+                    scanf("%d", &(v.as.ptr->as.i));
+                    break;
+                case 'f':
+                    if (v.as.ptr->type !=TYPE_FLOAT) {
+                        fprintf(stderr, "op_scanf: %%f expects a *float\n");
+                        exit(1);
+                    }
+                    scanf("%f", &(v.as.ptr->as.f));
+                    break;
+                case 's':
+                    if (v.as.ptr->type !=TYPE_STRING) {
+                        fprintf(stderr, "op_scanf: %%s expects a string\n");
+                        exit(1);
+                    }
+                    scanf("%s", &(v.as.ptr->as.s));
+                    break;
+                case 'b':
+                    if (v.as.ptr->type !=TYPE_BOOL) {
+                        fprintf(stderr, "op_scanf: %%b expects a *bool\n");
+                        exit(1);
+                    }
+                    scanf("%s", &(v.as.ptr->as.b));
+                    break;
+                default:
+                    fprintf(stderr, "op_scanf: unknown format specifier %%%c\n", spec);
+                    exit(1);
+            }
+            p += 2;
+        } else {
+            putchar(*p);
+            p++;
+        }
+    }
+}
+void op_fgets(Stack* stack, int max_len) {
+    Value ptr_value = pop(stack);
+    if (ptr_value.type != TYPE_PTR) {
+        fprintf(stderr, "read_line: expected a pointer on the stack\n");
+        exit(1);
+    }
+ 
+    Value* target = ptr_value.as.ptr;
+    if (target->type != TYPE_STRING || target->as.s == NULL) {
+        fprintf(stderr, "read_line: target variable is not an allocated string buffer\n");
+        exit(1);
+    }
+ 
+    if (fgets(target->as.s, max_len, stdin) == NULL) {
+        target->as.s[0] = '\0'; 
+        return;
+    }
+ 
+    size_t len = strlen(target->as.s);
+    if (len > 0 && target->as.s[len - 1] == '\n') {
+        target->as.s[len - 1] = '\0';
     }
 }

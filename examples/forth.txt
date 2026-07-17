@@ -1,0 +1,4 @@
+"Whats your name?\n> " printf
+let string buf[64]
+buf fgets
+buf deref "Hello, %s!\n" printf
