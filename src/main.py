@@ -3,11 +3,12 @@ import os
 
 
 class State(Enum):
-    Start   = 0
-    InInt   = 1
-    InFloat = 2
-    InStr   = 3
-    InLit   = 4
+    Start    = 0
+    InInt    = 1
+    InFloat  = 2
+    InStr    = 3
+    InLit    = 4
+    InEquals = 5 # for == => =<
 
 class TokenType(Enum):
     Int = 1
@@ -47,7 +48,11 @@ def tokenize(program):
                     state = State.InInt
                 elif c=='\"':
                     ttype = TokenType.Str
-                    state = State.InStr
+                    state = State.InStr # TODO add COMMENTS //
+                elif c=='=':
+                    state = State.InEquals
+                    value += c
+                    #ttype stays Lit
                 elif c.isspace() or c=='\0'or c=='\n':
                     i+=1
                     continue
@@ -65,7 +70,6 @@ def tokenize(program):
                     tokens.append((ttype,value))
                     value = ""
                     ttype = TokenType.Lit
-                
                 else:
                     ttype = TokenType.Lit
                     value += c
@@ -107,7 +111,7 @@ def tokenize(program):
                     tokens.append((ttype,value))
                     value = ""
                     ttype = TokenType.Lit
-                elif c in "[]{}()":
+                elif c in "[]{}()=":
                     state = State.Start
                     tokens.append((ttype,value))
                     value = ""
@@ -125,7 +129,19 @@ def tokenize(program):
                     i+=1
                 else:
                     value +=c
-                    
+            case State.InEquals:
+                if c in ">=<":
+                    value +=c
+                    tokens.append((ttype,value))
+                    value = ""
+                    ttype = TokenType.Lit
+                else:
+                    i-=1
+                    tokens.append((ttype,value))
+                    value = ""
+                    ttype = TokenType.Lit
+
+                state = State.Start
         i+=1
     if value != "":
         tokens.append((ttype,value))
@@ -157,7 +173,7 @@ def compile_tokens(tokens,file_path):
                     file.write(f"\tpush_string(&s,\"{token[1]}\");\n")
                 case TokenType.Float:
                     file.write(f"\t//PUSH FLOAT  `\"{token[1]}\"`\n")
-                    file.write(f"\tpush_float(&s,{token[1]}f);\n")
+                    file.write(f"\tpush_float(&s,{token[1]}f);\n")                    
                 case TokenType.Lit:
                     match token[1]:
                         case "+":
@@ -172,6 +188,17 @@ def compile_tokens(tokens,file_path):
                         case "*":
                             file.write(f"\t//MUL\n")
                             file.write(f"\top_mul(&s);\n")
+                        case "==":
+                            file.write(f"\t//EQUALS\n")
+                            file.write(f"\top_equals(&s);\n")
+                        case "=<":
+                            file.write(f"\t//LESS EQUALS\n")
+                            file.write(f"\top_less_equals(&s);\n")
+                        case "=>":
+                            file.write(f"\t//GREATER EQUALS\n")
+                            file.write(f"\top_greater_equals(&s);\n")
+                        case "{" | "}": #TODO ADD PROPER INDENTATION
+                            file.write(token[1]+'\n')
                         case "printf":
                             file.write(f"\t//PRINTF\n")
                             file.write(f"\top_printf(&s);\n")
@@ -264,7 +291,7 @@ def compile_file(input_path: str, output_path: str, verbose: bool = False):
  
  
 if __name__ == "__main__":
-    # python main.py program.em build/output.c
+    # python main.py program.txt build/output.c
     import sys
     if len(sys.argv) != 3:
         print("Usage: python compiler.py <input_file> <output_file.c>")

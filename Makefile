@@ -1,4 +1,4 @@
-all: first second third forth
+all: first second third forth six
 
 first.c:
 	python .\src\main.py .\examples\first.txt .\build\first.c
@@ -32,3 +32,10 @@ fifth.c:
 
 fifth: fifth.c
 	gcc .\lib\stack.c -o .\build\fifth .\build\fifth.c  -I .\lib\
+
+six.c:
+	python .\src\main.py .\examples\six.txt .\build\six.c
+
+six: six.c
+	gcc .\lib\stack.c -o .\build\six .\build\six.c  -I .\lib\
+	&.\build\six

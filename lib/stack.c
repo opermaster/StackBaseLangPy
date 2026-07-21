@@ -54,121 +54,67 @@ void print_stack(Stack s) {
         }
     }
 }
+bool compare_strings(const char* a, const char* b){
+    int a_len = strlen(a);
+    int b_len = strlen(b);
+    if( a_len != b_len) return false;
+    for(int i =0 ;i< a_len ;i++){
+        if(a[i] != b[i]) return false;
+    }
+    return true;
+}
 void op_add(Stack* s) {
     Value b = pop(s); 
     Value a = pop(s); 
  
-    Value result;
-
-    if (a.type == TYPE_INT && b.type == TYPE_INT) {
-        result.type = TYPE_INT;
-        result.as.i = a.as.i + b.as.i;
-    }
-    else if (a.type == TYPE_FLOAT && b.type == TYPE_FLOAT) {
-        result.type = TYPE_FLOAT;
-        result.as.f = a.as.f + b.as.f;
-    }
-    else if (a.type == TYPE_INT && b.type == TYPE_FLOAT) {
-        result.type = TYPE_FLOAT;
-        result.as.f = (float)a.as.i + b.as.f;
-    }
-    else if (a.type == TYPE_FLOAT && b.type == TYPE_INT) {
-        result.type = TYPE_FLOAT;
-        result.as.f = a.as.f + (float)b.as.i;
-    }
+    if (a.type == TYPE_INT && b.type == TYPE_INT)          push_int(s,a.as.i + b.as.i);
+    else if (a.type == TYPE_FLOAT && b.type == TYPE_FLOAT) push_float(s,a.as.f + b.as.f);
+    else if (a.type == TYPE_INT && b.type == TYPE_FLOAT)   push_float(s,(float)a.as.i + b.as.f);
+    else if (a.type == TYPE_FLOAT && b.type == TYPE_INT)   push_float(s,a.as.f + (float)b.as.i);
     else {
         fprintf(stderr, "Type error: cannot add these types\n");
         exit(1);
     }
- 
-    push(s, result);
 }
 void op_minus(Stack* s){
     Value b = pop(s); 
     Value a = pop(s); 
- 
-    Value result;
 
-    if (a.type == TYPE_INT && b.type == TYPE_INT) {
-        result.type = TYPE_INT;
-        result.as.i = a.as.i - b.as.i;
-    }
-    else if (a.type == TYPE_FLOAT && b.type == TYPE_FLOAT) {
-        result.type = TYPE_FLOAT;
-        result.as.f = a.as.f - b.as.f;
-    }
-    else if (a.type == TYPE_INT && b.type == TYPE_FLOAT) {
-        result.type = TYPE_FLOAT;
-        result.as.f = (float)a.as.i - b.as.f;
-    }
-    else if (a.type == TYPE_FLOAT && b.type == TYPE_INT) {
-        result.type = TYPE_FLOAT;
-        result.as.f = a.as.f - (float)b.as.i;
-    }
+    if (a.type == TYPE_INT && b.type == TYPE_INT)          push_int(s,a.as.i - b.as.i);
+    else if (a.type == TYPE_FLOAT && b.type == TYPE_FLOAT) push_float(s,a.as.f - b.as.f);
+    else if (a.type == TYPE_INT && b.type == TYPE_FLOAT)   push_float(s,(float)a.as.i - b.as.f);
+    else if (a.type == TYPE_FLOAT && b.type == TYPE_INT)   push_float(s,a.as.f - (float)b.as.i);
     else {
         fprintf(stderr, "Type error: cannot add these types\n");
         exit(1);
     }
- 
-    push(s, result);
 }
 void op_div(Stack* s){
     Value b = pop(s); 
     Value a = pop(s); 
  
-    Value result;
-
-    if (a.type == TYPE_INT && b.type == TYPE_INT) {
-        result.type = TYPE_INT;
-        result.as.i = a.as.i / b.as.i;
-    }
-    else if (a.type == TYPE_FLOAT && b.type == TYPE_FLOAT) {
-        result.type = TYPE_FLOAT;
-        result.as.f = a.as.f / b.as.f;
-    }
-    else if (a.type == TYPE_INT && b.type == TYPE_FLOAT) {
-        result.type = TYPE_FLOAT;
-        result.as.f = (float)a.as.i / b.as.f;
-    }
-    else if (a.type == TYPE_FLOAT && b.type == TYPE_INT) {
-        result.type = TYPE_FLOAT;
-        result.as.f = a.as.f / (float)b.as.i;
-    }
+    if (a.type == TYPE_INT && b.type == TYPE_INT)          push_int(s,a.as.i / b.as.i);
+    else if (a.type == TYPE_FLOAT && b.type == TYPE_FLOAT) push_float(s,a.as.f / b.as.f);
+    else if (a.type == TYPE_INT && b.type == TYPE_FLOAT)   push_float(s,(float)a.as.i / b.as.f);
+    else if (a.type == TYPE_FLOAT && b.type == TYPE_INT)   push_float(s,a.as.f / (float)b.as.i);
     else {
         fprintf(stderr, "Type error: cannot add these types\n");
         exit(1);
     }
- 
-    push(s, result);
 }
 void op_mul(Stack* s){
     Value b = pop(s); 
-    Value a = pop(s); 
- 
-    Value result;
-
-    if (a.type == TYPE_INT && b.type == TYPE_INT) {
-        result.type = TYPE_INT;
-        result.as.i = a.as.i * b.as.i;
-    }
-    else if (a.type == TYPE_FLOAT && b.type == TYPE_FLOAT) {
-        result.type = TYPE_FLOAT;
-        result.as.f = a.as.f * b.as.f;
-    }
-    else if (a.type == TYPE_INT && b.type == TYPE_FLOAT) {
-        result.type = TYPE_FLOAT;
-        result.as.f = (float)a.as.i * b.as.f;
-    }
-	else if (a.type == TYPE_FLOAT && b.type == TYPE_INT) {
-        result.type = TYPE_FLOAT;
-        result.as.f = a.as.f * (float)b.as.i;
-    }
+    Value a = pop(s);
+    
+    if (a.type == TYPE_INT && b.type == TYPE_INT)          push_int(s,a.as.i * b.as.i);
+    else if (a.type == TYPE_FLOAT && b.type == TYPE_FLOAT) push_float(s,a.as.f * b.as.f);
+    else if (a.type == TYPE_INT && b.type == TYPE_FLOAT)   push_float(s,(float)a.as.i * b.as.f);
+    else if (a.type == TYPE_FLOAT && b.type == TYPE_INT)   push_float(s,a.as.f * (float)b.as.i);
     else {
         fprintf(stderr, "Type error: cannot add these types\n");
         exit(1);
     }
- 
-    push(s, result);
+   
 }
 void push_int(Stack* stack, int value) {
     push(stack, (Value){ .type = TYPE_INT, .as.i = value });
@@ -399,5 +345,47 @@ void op_fgets(Stack* stack, int max_len) {
     size_t len = strlen(target->as.s);
     if (len > 0 && target->as.s[len - 1] == '\n') {
         target->as.s[len - 1] = '\0';
+    }
+}
+void op_equals(Stack* s){
+    Value b = pop(s); 
+    Value a = pop(s);
+    
+    if (a.type == TYPE_INT && b.type == TYPE_INT)             push_bool(s,a.as.i == b.as.i);
+    else if (a.type == TYPE_FLOAT && b.type == TYPE_FLOAT)    push_bool(s,a.as.f == b.as.f);
+    else if (a.type == TYPE_INT && b.type == TYPE_FLOAT)      push_bool(s,(float)a.as.i == b.as.f);
+    else if (a.type == TYPE_FLOAT && b.type == TYPE_INT)      push_bool(s,a.as.f == (float)b.as.i);
+    else if (a.type == TYPE_STRING && b.type == TYPE_STRING ) push_bool(s, compare_strings(a.as.s, b.as.s));
+    else {
+        fprintf(stderr, "Type error: cannot compare these types\n");
+        exit(1);
+    }
+}
+void op_greater_equals(Stack* s){
+    Value b = pop(s); 
+    Value a = pop(s);
+    
+    if (a.type == TYPE_INT && b.type == TYPE_INT)             push_bool(s,a.as.i >= b.as.i);
+    else if (a.type == TYPE_FLOAT && b.type == TYPE_FLOAT)    push_bool(s,a.as.f >= b.as.f);
+    else if (a.type == TYPE_INT && b.type == TYPE_FLOAT)      push_bool(s,(float)a.as.i >= b.as.f);
+    else if (a.type == TYPE_FLOAT && b.type == TYPE_INT)      push_bool(s,a.as.f >= (float)b.as.i);
+    else if (a.type == TYPE_STRING && b.type == TYPE_STRING ) push_bool(s, compare_strings(a.as.s, b.as.s));
+    else {
+        fprintf(stderr, "Type error: cannot compare these types\n");
+        exit(1);
+    }
+}
+void op_less_equals(Stack* s){
+    Value b = pop(s); 
+    Value a = pop(s);
+    
+    if (a.type == TYPE_INT && b.type == TYPE_INT)             push_bool(s,a.as.i <= b.as.i);
+    else if (a.type == TYPE_FLOAT && b.type == TYPE_FLOAT)    push_bool(s,a.as.f <= b.as.f);
+    else if (a.type == TYPE_INT && b.type == TYPE_FLOAT)      push_bool(s,(float)a.as.i <= b.as.f);
+    else if (a.type == TYPE_FLOAT && b.type == TYPE_INT)      push_bool(s,a.as.f <= (float)b.as.i);
+    else if (a.type == TYPE_STRING && b.type == TYPE_STRING ) push_bool(s, compare_strings(a.as.s, b.as.s));
+    else {
+        fprintf(stderr, "Type error: cannot compare these types\n");
+        exit(1);
     }
 }

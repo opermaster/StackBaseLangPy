@@ -59,4 +59,8 @@ void op_minus(Stack* s);
 void op_div(Stack* s);
 void op_mul(Stack* s);
 
+void op_equals(Stack* s);
+void op_greater_equals(Stack* s);
+void op_less_equals(Stack* s);
+
 #endif // STACK_H
