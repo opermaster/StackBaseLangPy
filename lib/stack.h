@@ -40,6 +40,7 @@ Value pop(Stack* stack);
 Value peek(Stack* stack);
 bool  stack_is_empty(Stack* stack);
 void  print_stack(Stack s);
+bool  is_truthy(Value v);
 
 void push_int(Stack* stack, int value);
 void push_float(Stack* stack, float value);

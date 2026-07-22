@@ -3,12 +3,13 @@ import os
 
 
 class State(Enum):
-    Start    = 0
-    InInt    = 1
-    InFloat  = 2
-    InStr    = 3
-    InLit    = 4
-    InEquals = 5 # for == => =<
+    Start     = 0
+    InInt     = 1
+    InFloat   = 2
+    InStr     = 3
+    InLit     = 4
+    InEquals  = 5 # for == => =<
+    InComment = 6
 
 class TokenType(Enum):
     Int = 1
@@ -21,6 +22,7 @@ class TokenType(Enum):
     CCParen = 8  # }
     SOParen = 9  # [
     SCParen = 10 # ]
+    Comment = 11 #/* */
     
 TYPE_MAP = {
     "int":    ("TYPE_INT",    "0",     "i"),
@@ -48,7 +50,13 @@ def tokenize(program):
                     state = State.InInt
                 elif c=='\"':
                     ttype = TokenType.Str
-                    state = State.InStr # TODO add COMMENTS //
+                    state = State.InStr
+                elif c=="/" and i+1!=len(program) and program[i+1] =='*':
+                    ttype = TokenType.Comment
+                    state = State.InComment
+                    value += c + program[i+1]
+                    i+=1
+                    
                 elif c=='=':
                     state = State.InEquals
                     value += c
@@ -74,7 +82,16 @@ def tokenize(program):
                     ttype = TokenType.Lit
                     value += c
                     state = State.InLit
-
+            case State.InComment:
+                if value[-1] =='*' and c =='/':
+                    ttype = TokenType.Comment
+                    value +=c
+                    state = State.Start
+                    tokens.append((ttype,value))
+                    value = ""
+                    ttype = TokenType.Lit
+                else:
+                    value +=c
             case State.InInt:
                 if c.isdigit():
                     value += c
@@ -151,14 +168,17 @@ def compile_tokens(tokens,file_path):
     declared_vars = set()
     var_sizes = {}      
     last_var_name = None
+    indent = "\t"
+    if_counter = 0
+    cond_counter = 0
     with open(file_path,"w") as file:
-        file.write("// Header\n")
+        file.write("// HEADER\n")
         file.write("#include <stdio.h>\n")
         file.write("#include \"stack.h\"\n")
         file.write("#include <stdlib.h>\n")
         file.write("\nint main(){\n")
         file.write("\tStack s; \n\tstack_init(&s);\n")
-        file.write("// BODY\n")
+        file.write("\t// BODY\n")
         
         i = 0
         
@@ -166,45 +186,51 @@ def compile_tokens(tokens,file_path):
             token = tokens[i]
             match token[0]:
                 case TokenType.Int:
-                    file.write(f"\t//PUSH INT `{token[1]}`\n")
-                    file.write(f"\tpush_int(&s,{token[1]});\n")
+                    file.write(f"//PUSH INT `{token[1]}`\n")
+                    file.write(f"{indent}push_int(&s,{token[1]});\n")
                 case TokenType.Str:
-                    file.write(f"\t//PUSH STR `\"{token[1]}\"`\n")
-                    file.write(f"\tpush_string(&s,\"{token[1]}\");\n")
+                    file.write(f"//PUSH STR `\"{token[1]}\"`\n")
+                    file.write(f"{indent}push_string(&s,\"{token[1]}\");\n")
                 case TokenType.Float:
-                    file.write(f"\t//PUSH FLOAT  `\"{token[1]}\"`\n")
-                    file.write(f"\tpush_float(&s,{token[1]}f);\n")                    
+                    file.write(f"//PUSH FLOAT  `\"{token[1]}\"`\n")
+                    file.write(f"{indent}push_float(&s,{token[1]}f);\n")
+                case TokenType.Comment:
+                    file.write(f"{token[1]}\n")
                 case TokenType.Lit:
                     match token[1]:
                         case "+":
-                            file.write(f"\t//PLUS\n")
-                            file.write(f"\top_add(&s);\n")
+                            file.write(f"//PLUS\n")
+                            file.write(f"{indent}op_add(&s);\n")
                         case "-":
-                            file.write(f"\t//MINUS\n")
-                            file.write(f"\top_minus(&s);\n")
+                            file.write(f"//MINUS\n")
+                            file.write(f"{indent}op_minus(&s);\n")
                         case "/":
-                            file.write(f"\t//DIV\n")
-                            file.write(f"\top_div(&s);\n")
+                            file.write(f"//DIV\n")
+                            file.write(f"{indent}op_div(&s);\n")
                         case "*":
-                            file.write(f"\t//MUL\n")
-                            file.write(f"\top_mul(&s);\n")
+                            file.write(f"//MUL\n")
+                            file.write(f"{indent}op_mul(&s);\n")
                         case "==":
-                            file.write(f"\t//EQUALS\n")
-                            file.write(f"\top_equals(&s);\n")
+                            file.write(f"//EQUALS\n")
+                            file.write(f"{indent}op_equals(&s);\n")
                         case "=<":
-                            file.write(f"\t//LESS EQUALS\n")
-                            file.write(f"\top_less_equals(&s);\n")
+                            file.write(f"//LESS EQUALS\n")
+                            file.write(f"{indent}op_less_equals(&s);\n")
                         case "=>":
-                            file.write(f"\t//GREATER EQUALS\n")
-                            file.write(f"\top_greater_equals(&s);\n")
-                        case "{" | "}": #TODO ADD PROPER INDENTATION
-                            file.write(token[1]+'\n')
+                            file.write(f"//GREATER EQUALS\n")
+                            file.write(f"{indent}op_greater_equals(&s);\n")
+                        case "{":
+                            file.write(indent+token[1]+'\n')
+                            indent+='\t'
+                        case "}":
+                            indent = indent[:-1]
+                            file.write(indent+token[1]+'\n')
                         case "printf":
-                            file.write(f"\t//PRINTF\n")
-                            file.write(f"\top_printf(&s);\n")
+                            file.write(f"//PRINTF\n")
+                            file.write(f"{indent}op_printf(&s);\n")
                         case "scanf":
-                            file.write(f"\t//SCANF\n")
-                            file.write(f"\top_scanf(&s);\n")
+                            file.write(f"//SCANF\n")
+                            file.write(f"{indent}op_scanf(&s);\n")
                         case "let":
                             type_name = tokens[i + 1][1]
                             var_name = tokens[i + 2][1]
@@ -221,21 +247,21 @@ def compile_tokens(tokens,file_path):
 
                                 array_size = int(tokens[i + 4][1])
 
-                                file.write(f"\t//LET {type_name} {var_name}[{array_size}]\n")
+                                file.write(f"//LET {type_name} {var_name}[{array_size}]\n")
                                 file.write(
-                                    f"\tValue {var_name} = (Value){{ .type = TYPE_STRING, "
+                                    f"{indent}Value {var_name} = (Value){{ .type = TYPE_STRING, "
                                     f".as.s = malloc({array_size} + 1) }};\n"
                                 )
-                                file.write(f"\t{var_name}.as.s[0] = '\\0';\n")
+                                file.write(f"{indent}{var_name}.as.s[0] = '\\0';\n")
 
                                 declared_vars.add(var_name)
                                 var_sizes[var_name] = array_size  # buffer size for  "read"
                                 i += 6  # let, type, name, '[', size, ']'
                                 continue
 
-                            file.write(f"\t//LET {type_name} {var_name}\n")
+                            file.write(f"//LET {type_name} {var_name}\n")
                             file.write(
-                                f"\tValue {var_name} = (Value){{ .type = {c_type_enum}, "
+                                f"{indent}Value {var_name} = (Value){{ .type = {c_type_enum}, "
                                 f".as.{field} = {default_val} }};\n"
                             )
 
@@ -244,23 +270,37 @@ def compile_tokens(tokens,file_path):
                             continue
 
                         case "store":
-                            file.write(f"\t//STORE\n")
-                            file.write(f"\top_store(&s);\n")
+                            file.write(f"//STORE\n")
+                            file.write(f"{indent}op_store(&s);\n")
     
                         case "deref":
-                            file.write(f"\t//DEREF\n")
-                            file.write(f"\top_deref(&s);\n")
+                            file.write(f"//DEREF\n")
+                            file.write(f"{indent}op_deref(&s);\n")
                         case "fgets":
                             if last_var_name is None or last_var_name not in var_sizes:
                                 raise SyntaxError("read: before 'fgets' must be variable array ('buf fgets')")
                             size = var_sizes[last_var_name]
-                            file.write(f"\t//fgets into {last_var_name}\n")
-                            file.write(f"\top_fgets(&s, {size});\n")
-                            
+                            file.write(f"//fgets into {last_var_name}\n")
+                            file.write(f"{indent}op_fgets(&s, {size});\n")
+                        case "if":
+                            file.write("//IF\n")
+                            file.write(f"{indent}Value __cond{if_counter} = pop(&s);\n")
+                            file.write(f"{indent}if (is_truthy(__cond{if_counter}))")
+                            if_counter +=1
+                        case "else":
+                            file.write("//ELSE\n")
+                            file.write(indent+"else")
+                        case "while":
+                            file.write(f"{indent}while (1)")
+                        case "do":
+                            file.write("//DO\n")
+                            file.write(f"{indent}Value __cond{cond_counter} = pop(&s);\n")
+                            file.write(f"{indent}if (!is_truthy(__cond{cond_counter})) break;\n")
+                            cond_counter += 1
                         case _:
                             if token[1] in declared_vars:
-                                file.write(f"\t//PUSH_PTR {token[1]}\n")
-                                file.write(f"\tpush_ptr(&s, &{token[1]});\n")
+                                file.write(f"//PUSH_PTR {token[1]}\n")
+                                file.write(f"{indent}push_ptr(&s, &{token[1]});\n")
                                 last_var_name = token[1]
                             else:
                                 raise SyntaxError(f"Unknown literal: `{token[1]}`")

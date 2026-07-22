@@ -1,4 +1,4 @@
-all: first second third forth six
+all: first second third forth six seven
 
 first.c:
 	python .\src\main.py .\examples\first.txt .\build\first.c
@@ -39,3 +39,16 @@ six.c:
 six: six.c
 	gcc .\lib\stack.c -o .\build\six .\build\six.c  -I .\lib\
 	&.\build\six
+
+seven.c:
+	python .\src\main.py .\examples\seven.txt .\build\seven.c
+
+seven: seven.c
+	gcc .\lib\stack.c -o .\build\seven .\build\seven.c  -I .\lib\
+
+eight.c:
+	python .\src\main.py .\examples\eight.txt .\build\eight.c
+
+eight: eight.c
+	gcc .\lib\stack.c -o .\build\eight .\build\eight.c  -I .\lib\
+	&.\build\eight

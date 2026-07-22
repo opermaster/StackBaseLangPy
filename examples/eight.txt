@@ -1,0 +1,15 @@
+let int a
+let int b
+
+1 b store
+
+/* a = 0, b = 1  */
+
+while{
+    a deref 1000 =<
+    do
+    b deref "%d\n" printf 
+    a deref b deref + /* a + b */
+    b deref a store   /* b = a */
+    b store           /* b = result(a + b) */
+}

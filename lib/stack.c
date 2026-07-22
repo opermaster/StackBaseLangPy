@@ -389,3 +389,14 @@ void op_less_equals(Stack* s){
         exit(1);
     }
 }
+bool is_truthy(Value v) {
+    switch (v.type) {
+        case TYPE_BOOL:   return v.as.b;
+        case TYPE_INT:    return v.as.i != 0;
+        case TYPE_FLOAT:  return v.as.f != 0.0f;
+        case TYPE_STRING: return v.as.s != NULL && v.as.s[0] != '\0';
+        case TYPE_PTR:    return v.as.ptr != NULL;
+        case TYPE_ARRAY:  return v.as.obj != NULL;
+        default:          return false;
+    }
+}
