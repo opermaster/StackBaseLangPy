@@ -1,0 +1,8 @@
+25 25 == true
+25 24 == false
+one one ==true
+one two == false
+25 => 20 true
+25 => 30 false
+25 =< 20 false
+25 =< 30 true

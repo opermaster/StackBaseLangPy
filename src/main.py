@@ -337,4 +337,4 @@ if __name__ == "__main__":
         print("Usage: python compiler.py <input_file> <output_file.c>")
         sys.exit(1)
  
-    compile_file(sys.argv[1], sys.argv[2], verbose=True)
+    compile_file(sys.argv[1], sys.argv[2], verbose=False)

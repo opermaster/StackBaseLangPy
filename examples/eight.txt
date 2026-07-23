@@ -6,7 +6,7 @@ let int b
 /* a = 0, b = 1  */
 
 while{
-    a deref 1000 =<
+    a deref 10000 =<
     do
     b deref "%d\n" printf 
     a deref b deref + /* a + b */
