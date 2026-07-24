@@ -1,10 +1,12 @@
-let int a
-let int b
-let int sum
+func main {
 
-2 a store
-2 b store
-a deref b deref + sum store
+     let int a
+     let int b
+     let int sum
 
-sum deref "%d" printf
+     2 a store
+     2 b store
+     a deref b deref + sum store
 
+     sum deref "%d" printf
+}

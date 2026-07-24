@@ -1,9 +1,11 @@
-1 5 +
-"%d\n" printf
-"Hello world!\n" printf
-2 2 *
-"%d\n" printf
-10 2 /
-"%d\n" printf
-2.22 2 *
-"%f\n" printf
+func main {
+     1 5 +
+     "%d\n" printf
+     "Hello world!\n" printf
+     2 2 *
+     "%d\n" printf
+     10 2 /
+     "%d\n" printf
+     2.22 2 *
+     "%f\n" printf
+}

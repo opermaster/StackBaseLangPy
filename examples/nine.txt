@@ -1,0 +1,9 @@
+
+func hello {
+     "Hello world" printf
+}
+
+func main {
+     hello
+     retzero
+}

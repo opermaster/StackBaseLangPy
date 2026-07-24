@@ -1,9 +1,12 @@
-let int age
-age "How old are you? > %d" scanf
+func main{
 
-age deref 18 => if{
-    "Okay, you are old enough for using this program!!" printf
-} else {
-    18 age deref -
-    "No, you are young, come back later, after %d years!" printf
+    let int age
+    age "How old are you? > %d" scanf
+
+    age deref 18 => if{
+          "Okay, you are old enough for using this program!!" printf
+    } else {
+       18 age deref -
+       "No, you are young, come back later, after %d years!" printf
+    }
 }

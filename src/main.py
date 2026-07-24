@@ -165,10 +165,11 @@ def tokenize(program):
     return tokens
 
 def compile_tokens(tokens,file_path):
-    declared_vars = set()
+    declared_vars  = set()
+    declared_funcs = set()
     var_sizes = {}      
     last_var_name = None
-    indent = "\t"
+    indent = ""
     if_counter = 0
     cond_counter = 0
     with open(file_path,"w") as file:
@@ -176,9 +177,10 @@ def compile_tokens(tokens,file_path):
         file.write("#include <stdio.h>\n")
         file.write("#include \"stack.h\"\n")
         file.write("#include <stdlib.h>\n")
-        file.write("\nint main(){\n")
-        file.write("\tStack s; \n\tstack_init(&s);\n")
-        file.write("\t// BODY\n")
+        file.write("#define RETZERO return 0\n")
+        #file.write("\nint main(){\n")
+        #file.write("\tStack s; \n\tstack_init(&s);\n")
+        #file.write("\t// BODY\n")
         
         i = 0
         
@@ -187,38 +189,38 @@ def compile_tokens(tokens,file_path):
             match token[0]:
                 case TokenType.Int:
                     file.write(f"//PUSH INT `{token[1]}`\n")
-                    file.write(f"{indent}push_int(&s,{token[1]});\n")
+                    file.write(f"{indent}push_int(s,{token[1]});\n")
                 case TokenType.Str:
                     file.write(f"//PUSH STR `\"{token[1]}\"`\n")
-                    file.write(f"{indent}push_string(&s,\"{token[1]}\");\n")
+                    file.write(f"{indent}push_string(s,\"{token[1]}\");\n")
                 case TokenType.Float:
                     file.write(f"//PUSH FLOAT  `\"{token[1]}\"`\n")
-                    file.write(f"{indent}push_float(&s,{token[1]}f);\n")
+                    file.write(f"{indent}push_float(s,{token[1]}f);\n")
                 case TokenType.Comment:
                     file.write(f"{token[1]}\n")
                 case TokenType.Lit:
                     match token[1]:
                         case "+":
                             file.write(f"//PLUS\n")
-                            file.write(f"{indent}op_add(&s);\n")
+                            file.write(f"{indent}op_add(s);\n")
                         case "-":
                             file.write(f"//MINUS\n")
-                            file.write(f"{indent}op_minus(&s);\n")
+                            file.write(f"{indent}op_minus(s);\n")
                         case "/":
                             file.write(f"//DIV\n")
-                            file.write(f"{indent}op_div(&s);\n")
+                            file.write(f"{indent}op_div(s);\n")
                         case "*":
                             file.write(f"//MUL\n")
-                            file.write(f"{indent}op_mul(&s);\n")
+                            file.write(f"{indent}op_mul(s);\n")
                         case "==":
                             file.write(f"//EQUALS\n")
-                            file.write(f"{indent}op_equals(&s);\n")
+                            file.write(f"{indent}op_equals(s);\n")
                         case "=<":
                             file.write(f"//LESS EQUALS\n")
-                            file.write(f"{indent}op_less_equals(&s);\n")
+                            file.write(f"{indent}op_less_equals(s);\n")
                         case "=>":
                             file.write(f"//GREATER EQUALS\n")
-                            file.write(f"{indent}op_greater_equals(&s);\n")
+                            file.write(f"{indent}op_greater_equals(s);\n")
                         case "{":
                             file.write(indent+token[1]+'\n')
                             indent+='\t'
@@ -227,10 +229,10 @@ def compile_tokens(tokens,file_path):
                             file.write(indent+token[1]+'\n')
                         case "printf":
                             file.write(f"//PRINTF\n")
-                            file.write(f"{indent}op_printf(&s);\n")
+                            file.write(f"{indent}op_printf(s);\n")
                         case "scanf":
                             file.write(f"//SCANF\n")
-                            file.write(f"{indent}op_scanf(&s);\n")
+                            file.write(f"{indent}op_scanf(s);\n")
                         case "let":
                             type_name = tokens[i + 1][1]
                             var_name = tokens[i + 2][1]
@@ -271,20 +273,20 @@ def compile_tokens(tokens,file_path):
 
                         case "store":
                             file.write(f"//STORE\n")
-                            file.write(f"{indent}op_store(&s);\n")
+                            file.write(f"{indent}op_store(s);\n")
     
                         case "deref":
                             file.write(f"//DEREF\n")
-                            file.write(f"{indent}op_deref(&s);\n")
+                            file.write(f"{indent}op_deref(s);\n")
                         case "fgets":
                             if last_var_name is None or last_var_name not in var_sizes:
                                 raise SyntaxError("read: before 'fgets' must be variable array ('buf fgets')")
                             size = var_sizes[last_var_name]
                             file.write(f"//fgets into {last_var_name}\n")
-                            file.write(f"{indent}op_fgets(&s, {size});\n")
+                            file.write(f"{indent}op_fgets(s, {size});\n")
                         case "if":
                             file.write("//IF\n")
-                            file.write(f"{indent}Value __cond{if_counter} = pop(&s);\n")
+                            file.write(f"{indent}Value __cond{if_counter} = pop(s);\n")
                             file.write(f"{indent}if (is_truthy(__cond{if_counter}))")
                             if_counter +=1
                         case "else":
@@ -294,19 +296,37 @@ def compile_tokens(tokens,file_path):
                             file.write(f"{indent}while (1)")
                         case "do":
                             file.write("//DO\n")
-                            file.write(f"{indent}Value __cond{cond_counter} = pop(&s);\n")
+                            file.write(f"{indent}Value __cond{cond_counter} = pop(s);\n")
                             file.write(f"{indent}if (!is_truthy(__cond{cond_counter})) break;\n")
                             cond_counter += 1
+                        case "retzero":
+                            file.write(f"{indent}RETZERO;\n")
+                        case "func":
+                            func_name = tokens[i+1][1]
+                            file.write(f"//FUNC_DECLARATION `{func_name}`\n")
+                            declared_funcs.add(func_name)
+                            if func_name == "main":
+                                file.write(f"{indent}int {func_name}(){{\n")
+                                i+=1 # SKIPPING `{`
+                                indent +='\t'
+                                file.write("\tStack __stack_storage = {0};\nStack* s = &__stack_storage;\n\tstack_init(s);\n")
+                                file.write("\t//MAIN BODY\n")
+                            else:
+                                file.write(f"{indent}void {func_name}(Stack* s)")
+                            i+=1 # skip func name
                         case _:
                             if token[1] in declared_vars:
                                 file.write(f"//PUSH_PTR {token[1]}\n")
-                                file.write(f"{indent}push_ptr(&s, &{token[1]});\n")
+                                file.write(f"{indent}push_ptr(s, &{token[1]});\n")
                                 last_var_name = token[1]
+                                
+                            elif token[1] in declared_funcs:
+                                file.write(f"//FUNC CALL `{token[1]}`\n")
+                                file.write(f"{indent}{token[1]}(s);\n")
                             else:
                                 raise SyntaxError(f"Unknown literal: `{token[1]}`")
                             
             i+=1
-        file.write("\treturn 0;\n};")
 def compile_file(input_path: str, output_path: str, verbose: bool = False):
     if not os.path.isfile(input_path):
         raise FileNotFoundError(f"Source file not found: {input_path}")
