@@ -27,6 +27,12 @@ typedef struct Value{
     } as;
 }Value;
 
+typedef struct {
+    int length;     
+    int capacity;  
+    Value* items;   
+} ArrayObject;
+
 #define STACK_CAPACITY 1000
  
 typedef struct {
@@ -51,10 +57,15 @@ void push_ptr(Stack* stack, Value* ptr);
 void op_deref(Stack* stack);
 void op_store(Stack* stack);
 
+void op_arr_get(Stack* stack);
+void op_arr_set(Stack* stack);
+
 void op_printf(Stack* stack);
 void op_scanf(Stack* stack);
 void op_fgets(Stack* stack, int max_len);
-
+void op_sizeof(Stack* stack);
+void op_strlen(Stack* stack);
+   
 void op_add(Stack* s);
 void op_minus(Stack* s);
 void op_div(Stack* s);
@@ -63,5 +74,9 @@ void op_mul(Stack* s);
 void op_equals(Stack* s);
 void op_greater_equals(Stack* s);
 void op_less_equals(Stack* s);
+
+ArrayObject* array_create(int capacity, ValueType elem_type);
+Value array_get(ArrayObject* arr, int index);
+void  array_set(ArrayObject* arr, int index, Value v);
 
 #endif // STACK_H

@@ -50,6 +50,8 @@ FILES = [
     "seven",
     "eight",
     "nine",
+    "ten",
+    "eleven"
 ]
 
 TIMEOUT = 5  # seconds. Prevents programs waiting for input (with no inputs file) from hanging tests

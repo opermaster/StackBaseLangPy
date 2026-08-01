@@ -29,6 +29,7 @@ TYPE_MAP = {
     "float":  ("TYPE_FLOAT",  "0.0f",  "f"),
     "string": ("TYPE_STRING", "NULL",  "s"),
     "bool":   ("TYPE_BOOL",   "false" ,"b"),
+    "array":  ("TYPE_ARRAY",  "NULL",  "obj"),
 }
 
 def tokenize(program):
@@ -38,7 +39,9 @@ def tokenize(program):
     ttype  = TokenType.Lit
 
     i = 0
+
     
+                 
     while (i< len(program)):
         c = program[i]
             
@@ -165,6 +168,7 @@ def tokenize(program):
     return tokens
 
 def compile_tokens(tokens,file_path):
+    
     declared_vars  = set()
     declared_funcs = set()
     var_sizes = {}      
@@ -172,15 +176,14 @@ def compile_tokens(tokens,file_path):
     indent = ""
     if_counter = 0
     cond_counter = 0
+    
+    
     with open(file_path,"w") as file:
         file.write("// HEADER\n")
         file.write("#include <stdio.h>\n")
         file.write("#include \"stack.h\"\n")
         file.write("#include <stdlib.h>\n")
         file.write("#define RETZERO return 0\n")
-        #file.write("\nint main(){\n")
-        #file.write("\tStack s; \n\tstack_init(&s);\n")
-        #file.write("\t// BODY\n")
         
         i = 0
         
@@ -233,6 +236,23 @@ def compile_tokens(tokens,file_path):
                         case "scanf":
                             file.write(f"//SCANF\n")
                             file.write(f"{indent}op_scanf(s);\n")
+                        case "fgets":
+                            if last_var_name is None or last_var_name not in var_sizes:
+                                raise SyntaxError("read: before 'fgets' must be variable array ('buf fgets')")
+                            size = var_sizes[last_var_name]
+                            file.write(f"//fgets into {last_var_name}\n")
+                            file.write(f"{indent}op_fgets(s, {size});\n")
+                        case "sizeof":
+                            type_name = tokens[i + 1][1]
+                            sizes = {"int": 4, "float": 4, "bool": 1, "string": 8}
+                            if type_name in sizes:
+                                file.write(f"{indent}push_int(s, {sizes[type_name]});\n")
+                                i += 1
+                            else:
+                                file.write(f"{indent}op_sizeof(s);\n")
+                        case "strlen":
+                             file.write(f"{indent}op_strlen(s);\n")
+                             
                         case "let":
                             type_name = tokens[i + 1][1]
                             var_name = tokens[i + 2][1]
@@ -243,21 +263,29 @@ def compile_tokens(tokens,file_path):
                                 raise SyntaxError(f"Unknown type '{type_name}' in let")
                             if tokens[i+3][0]==TokenType.SOParen:
                                 isarray = True
+                                
                             if isarray:
-                                if c_type_enum != "TYPE_STRING":
-                                    raise SyntaxError("Now only support for 'string'-arrays (for fgets)")
-
                                 array_size = int(tokens[i + 4][1])
 
-                                file.write(f"//LET {type_name} {var_name}[{array_size}]\n")
-                                file.write(
-                                    f"{indent}Value {var_name} = (Value){{ .type = TYPE_STRING, "
-                                    f".as.s = malloc({array_size} + 1) }};\n"
-                                )
-                                file.write(f"{indent}{var_name}.as.s[0] = '\\0';\n")
+                                if c_type_enum == "TYPE_STRING":
+                                    
+                                    file.write(f"//LET {type_name} {var_name}[{array_size}]\n")
+                                    file.write(
+                                        f"{indent}Value {var_name} = (Value){{ .type = TYPE_STRING, "
+                                        f".as.s = malloc({array_size} + 1) }};\n"
+                                    )
+                                    file.write(f"{indent}{var_name}.as.s[0] = '\\0';\n")
 
-                                declared_vars.add(var_name)
-                                var_sizes[var_name] = array_size  # buffer size for  "read"
+                                    declared_vars.add(var_name)
+                                    var_sizes[var_name] = array_size  # buffer size for  "read"
+                                else:
+                                    file.write(f"//LET {type_name} {var_name}[{array_size}] (array)\n")
+                                    file.write(
+                                        f"{indent}Value {var_name} = (Value){{ .type = TYPE_ARRAY, "
+                                        f".as.obj = array_create({array_size}, {c_type_enum}) }};\n"
+                                    )
+                                    var_sizes[var_name] = array_size
+                                    declared_vars.add(var_name)
                                 i += 6  # let, type, name, '[', size, ']'
                                 continue
 
@@ -270,7 +298,12 @@ def compile_tokens(tokens,file_path):
                             declared_vars.add(var_name)
                             i += 3
                             continue
-
+                        case "arr_get":
+                            file.write(f"{indent}//ARR_GET\n")
+                            file.write(f"{indent}op_arr_get(s);\n")
+                        case "arr_set":
+                            file.write(f"{indent}//ARR_SET\n")
+                            file.write(f"{indent}op_arr_set(s);\n")
                         case "store":
                             file.write(f"//STORE\n")
                             file.write(f"{indent}op_store(s);\n")
@@ -278,12 +311,7 @@ def compile_tokens(tokens,file_path):
                         case "deref":
                             file.write(f"//DEREF\n")
                             file.write(f"{indent}op_deref(s);\n")
-                        case "fgets":
-                            if last_var_name is None or last_var_name not in var_sizes:
-                                raise SyntaxError("read: before 'fgets' must be variable array ('buf fgets')")
-                            size = var_sizes[last_var_name]
-                            file.write(f"//fgets into {last_var_name}\n")
-                            file.write(f"{indent}op_fgets(s, {size});\n")
+                        
                         case "if":
                             file.write("//IF\n")
                             file.write(f"{indent}Value __cond{if_counter} = pop(s);\n")

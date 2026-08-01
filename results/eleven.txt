@@ -1,0 +1,4 @@
+int = 4
+float = 4
+sizeof(nums) = 5
+0 0 0 0 0 

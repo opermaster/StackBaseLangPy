@@ -1,0 +1,83 @@
+func print_array{
+    /* len array */
+    let int len
+    let array nums
+    let int i
+    nums store
+    nums deref sizeof len store
+    len deref 1 - len store
+    while {
+        i deref len deref =<
+        do
+        nums deref i deref arr_get
+        "%d " printf
+        i deref 1 + i store
+    }
+    "\n" printf
+}
+func fill_array{
+    let int len
+    let array nums
+    let int i
+    nums deref sizeof len store
+    len deref 1 - len store
+    while {
+        i deref len deref =<
+        do
+        nums deref i deref i deref arr_set
+        i deref 1 + i store
+    }
+}
+func fill_array_with_num{
+    let int len
+    let array nums
+    let int num
+    let int i
+
+    nums store
+    nums deref sizeof len store
+    len deref 1 - len store
+    num store
+        
+    while {
+        i deref len deref =<
+        do
+        nums deref i deref num deref arr_set
+        i deref 1 + i store
+    }
+}
+func mul_array_with_num{
+    let int len
+    let array nums
+    let int num
+    let int i
+    
+   
+    nums store
+    nums deref sizeof len store
+    len deref 1 - len store
+    num store
+    while {
+        i deref len deref =<
+        do
+        nums deref i deref  nums deref i deref arr_get num deref *  arr_set
+        i deref 1 + i store
+    }
+}
+
+func main{
+     "Hello world\n" printf
+     let int nums [5]
+     nums deref print_array
+     10 nums deref fill_array_with_num
+     nums deref print_array
+     nums deref fill_array
+     nums deref print_array
+     2 nums deref mul_array_with_num
+     nums deref print_array
+     /*nums deref 0 arr_get
+     "%d\n" printf
+     nums deref 0 5 arr_set
+     nums deref 0 arr_get
+     "%d\n" printf*/
+}

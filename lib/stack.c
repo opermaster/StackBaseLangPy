@@ -57,12 +57,28 @@ void print_stack(Stack s) {
 bool compare_strings(const char* a, const char* b){
     int a_len = strlen(a);
     int b_len = strlen(b);
+    
     if( a_len != b_len) return false;
     for(int i =0 ;i< a_len ;i++){
         if(a[i] != b[i]) return false;
     }
     return true;
 }
+bool compare_strings_leng(const char* a, const char* b){
+    int a_len = strlen(a);
+    int b_len = strlen(b);
+    
+    if( a_len == b_len) return true;
+    return a_len > b_len;
+}
+bool compare_strings_lenl(const char* a, const char* b){
+    int a_len = strlen(a);
+    int b_len = strlen(b);
+    
+    if( a_len == b_len) return true;
+    return a_len < b_len;
+}
+
 void op_add(Stack* s) {
     Value b = pop(s); 
     Value a = pop(s); 
@@ -347,6 +363,33 @@ void op_fgets(Stack* stack, int max_len) {
         target->as.s[len - 1] = '\0';
     }
 }
+void op_sizeof(Stack* stack) {
+    Value v = pop(stack);
+ 
+    switch (v.type) {
+        case TYPE_ARRAY: {
+            ArrayObject* arr = (ArrayObject*)v.as.obj;
+            push(stack, (Value){ .type = TYPE_INT, .as.i = arr->length });
+            break;
+        }
+        case TYPE_STRING:
+            push(stack, (Value){ .type = TYPE_INT, .as.i = (int)strlen(v.as.s) });
+            break;
+        default:
+            fprintf(stderr, "op_sizeof: unsupported type (expected array or string, did you forget 'deref'?)\n");
+            exit(1);
+    }
+}
+void op_strlen(Stack* stack) {
+    Value s = pop(stack);
+    if(s.type == TYPE_STRING){
+        push_int(stack,strlen(s.as.s));
+    }else {
+        fprintf(stderr, "op_strlen: unsupported type (expected string)\n");
+        exit(1);
+    } 
+    
+}
 void op_equals(Stack* s){
     Value b = pop(s); 
     Value a = pop(s);
@@ -369,7 +412,7 @@ void op_greater_equals(Stack* s){
     else if (a.type == TYPE_FLOAT && b.type == TYPE_FLOAT)    push_bool(s,a.as.f >= b.as.f);
     else if (a.type == TYPE_INT && b.type == TYPE_FLOAT)      push_bool(s,(float)a.as.i >= b.as.f);
     else if (a.type == TYPE_FLOAT && b.type == TYPE_INT)      push_bool(s,a.as.f >= (float)b.as.i);
-    else if (a.type == TYPE_STRING && b.type == TYPE_STRING ) push_bool(s, compare_strings(a.as.s, b.as.s));
+    else if (a.type == TYPE_STRING && b.type == TYPE_STRING ) push_bool(s, compare_strings_leng(a.as.s, b.as.s));
     else {
         fprintf(stderr, "Type error: cannot compare these types\n");
         exit(1);
@@ -383,7 +426,7 @@ void op_less_equals(Stack* s){
     else if (a.type == TYPE_FLOAT && b.type == TYPE_FLOAT)    push_bool(s,a.as.f <= b.as.f);
     else if (a.type == TYPE_INT && b.type == TYPE_FLOAT)      push_bool(s,(float)a.as.i <= b.as.f);
     else if (a.type == TYPE_FLOAT && b.type == TYPE_INT)      push_bool(s,a.as.f <= (float)b.as.i);
-    else if (a.type == TYPE_STRING && b.type == TYPE_STRING ) push_bool(s, compare_strings(a.as.s, b.as.s));
+    else if (a.type == TYPE_STRING && b.type == TYPE_STRING ) push_bool(s, compare_strings_lenl(a.as.s, b.as.s));
     else {
         fprintf(stderr, "Type error: cannot compare these types\n");
         exit(1);
@@ -399,4 +442,75 @@ bool is_truthy(Value v) {
         case TYPE_ARRAY:  return v.as.obj != NULL;
         default:          return false;
     }
+}
+ArrayObject* array_create(int capacity, ValueType elem_type) {
+    if (capacity <= 0) {
+        fprintf(stderr, "array_create: capacity must be positive\n");
+        exit(1);
+    }
+ 
+    ArrayObject* arr = malloc(sizeof(ArrayObject));
+    arr->capacity = capacity;
+    arr->length = capacity;
+ 
+    arr->items = malloc(sizeof(Value) * capacity);
+    for (int idx = 0; idx < capacity; idx++) {
+        arr->items[idx].type = elem_type;
+        memset(&arr->items[idx].as, 0, sizeof(arr->items[idx].as));
+    }
+ 
+    return arr;
+}
+ 
+Value array_get(ArrayObject* arr, int index) {
+    if (index < 0 || index >= arr->length) {
+        fprintf(stderr, "array_get: index %d out of bounds (length %d)\n", index, arr->length);
+        exit(1);
+    }
+    return arr->items[index];
+}
+ 
+void array_set(ArrayObject* arr, int index, Value v) {
+    if (index < 0 || index >= arr->length) {
+        fprintf(stderr, "array_set: index %d out of bounds (length %d)\n", index, arr->length);
+        exit(1);
+    }
+    arr->items[index] = v;
+}
+void op_arr_get(Stack* stack) {
+    Value idx_v = pop(stack);
+    Value arr_v = pop(stack);
+ 
+    if (arr_v.type != TYPE_ARRAY) {
+        fprintf(stderr, "op_arr_get: expected an array on the stack (did you forget 'deref'?)\n");
+        exit(1);
+    }
+    if (idx_v.type != TYPE_INT) {
+        fprintf(stderr, "op_arr_get: expected an int index\n");
+        exit(1);
+    }
+ 
+    ArrayObject* arr = (ArrayObject*)arr_v.as.obj;
+    Value result = array_get(arr, idx_v.as.i);
+    //TODO: Make avaliable for strings
+    push(stack, result);
+}
+ 
+void op_arr_set(Stack* stack) {
+    Value value = pop(stack);
+    Value idx_v = pop(stack);
+    Value arr_v = pop(stack);
+ 
+    if (arr_v.type != TYPE_ARRAY) {
+        fprintf(stderr, "op_arr_set: expected an array on the stack (did you forget 'deref'?)\n");
+        exit(1);
+    }
+    if (idx_v.type != TYPE_INT) {
+        fprintf(stderr, "op_arr_set: expected an int index\n");
+        exit(1);
+    }
+ 
+    ArrayObject* arr = (ArrayObject*)arr_v.as.obj;
+    array_set(arr, idx_v.as.i, value);
+     //TODO: Make avaliable for strings
 }
