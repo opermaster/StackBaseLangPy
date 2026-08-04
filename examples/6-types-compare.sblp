@@ -8,14 +8,15 @@ func main {
 
 
     "one" "one" ==
-    "one one ==%b\n" printf        
+    "one one == %b\n" printf        
 
 
     "one" "two" ==
     "one two == %b\n" printf
-
-
-
+    
+    'a' 'a' ==
+    "a a == %b\n" printf
+    
     25 20 => 
     "25 => 20 %b\n" printf
 
@@ -27,4 +28,6 @@ func main {
 
     25 30 =<
     "25 =< 30 %b\n" printf
+
+
 }

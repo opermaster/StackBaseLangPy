@@ -41,17 +41,17 @@ EXE_SUFFIX = ".exe" if os.name == "nt" else ""
 
 # ---------- List of test files (without extension) ----------
 FILES = [
-    "first",
-    "second",
-    "third",
-    "forth",
-    "fifth",
-    "six",
-    "seven",
-    "eight",
-    "nine",
-    "ten",
-    "eleven"
+    "1-hello-world",
+    "2-math-ops",
+    "3-variables",
+    "4-buffer-fgets",
+    "5-scanf",
+    "6-types-compare",
+    "7-if",
+    "8-loops-comments",
+    "9-functions",
+    "10-funcs-params-arrays",
+    "11-strlen-sizeof",
 ]
 
 TIMEOUT = 5  # seconds. Prevents programs waiting for input (with no inputs file) from hanging tests
@@ -65,7 +65,7 @@ def ensure_dirs():
 
 def compile_file(name: str) -> Path:
     """Build examples/<name>.txt -> build/<name>.c -> build/<name>(.exe)"""
-    src_txt = EXAMPLES_DIR / f"{name}.txt"
+    src_txt = EXAMPLES_DIR / f"{name}.sblp"
     out_c = BUILD_DIR / f"{name}.c"
     out_exe = BUILD_DIR / f"{name}{EXE_SUFFIX}"
 

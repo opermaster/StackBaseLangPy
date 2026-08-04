@@ -22,12 +22,12 @@ func main{
      sizeof int "int = %d\n" printf
      sizeof float "float = %d\n" printf
 
-     let int nums [5]
+     5 let [int] nums
      nums deref sizeof "sizeof(nums) = %d\n" printf
      nums deref print_array
 
-     let string name
+     /*let string name
      "Kiril" name store
      name deref strlen "Name len is: %d\n" printf
-     name deref 0 arr_get "%c" printf
+     name deref 0 arr_get "%c" printf*/
 }    

@@ -48,6 +48,9 @@ void print_stack(Stack s) {
             case TYPE_BOOL:
                 printf("[%d]=%s\n", i, s.data[i].as.b ? "true" : "false");
                 break;
+            case TYPE_CHAR:
+                printf("[%d]=%c\n", i, s.data[i].as.c);
+                break;
             case TYPE_ARRAY:
                 printf("[%d]=<array %p>\n", i, s.data[i].as.obj);
                 break;
@@ -86,7 +89,11 @@ void op_add(Stack* s) {
     if (a.type == TYPE_INT && b.type == TYPE_INT)          push_int(s,a.as.i + b.as.i);
     else if (a.type == TYPE_FLOAT && b.type == TYPE_FLOAT) push_float(s,a.as.f + b.as.f);
     else if (a.type == TYPE_INT && b.type == TYPE_FLOAT)   push_float(s,(float)a.as.i + b.as.f);
-    else if (a.type == TYPE_FLOAT && b.type == TYPE_INT)   push_float(s,a.as.f + (float)b.as.i);
+    else if (a.type == TYPE_FLOAT && b.type == TYPE_INT)   push_float(s,a.as.f + (float)b.as.i); 
+    else if (a.type == TYPE_CHAR && b.type == TYPE_CHAR)   push_char(s,a.as.c + b.as.c);
+    else if (a.type == TYPE_INT && b.type == TYPE_CHAR)    push_char(s,a.as.i + b.as.c);
+    else if (a.type == TYPE_CHAR && b.type == TYPE_INT)    push_char(s,a.as.c + b.as.i); 
+    //TODO: Add support for strings
     else {
         fprintf(stderr, "Type error: cannot add these types\n");
         exit(1);
@@ -100,6 +107,9 @@ void op_minus(Stack* s){
     else if (a.type == TYPE_FLOAT && b.type == TYPE_FLOAT) push_float(s,a.as.f - b.as.f);
     else if (a.type == TYPE_INT && b.type == TYPE_FLOAT)   push_float(s,(float)a.as.i - b.as.f);
     else if (a.type == TYPE_FLOAT && b.type == TYPE_INT)   push_float(s,a.as.f - (float)b.as.i);
+    else if (a.type == TYPE_CHAR && b.type == TYPE_CHAR)   push_char(s,a.as.c - b.as.c);
+    else if (a.type == TYPE_INT && b.type == TYPE_CHAR)    push_char(s,a.as.i - b.as.c);
+    else if (a.type == TYPE_CHAR && b.type == TYPE_INT)    push_char(s,a.as.c - b.as.i); 
     else {
         fprintf(stderr, "Type error: cannot add these types\n");
         exit(1);
@@ -113,6 +123,9 @@ void op_div(Stack* s){
     else if (a.type == TYPE_FLOAT && b.type == TYPE_FLOAT) push_float(s,a.as.f / b.as.f);
     else if (a.type == TYPE_INT && b.type == TYPE_FLOAT)   push_float(s,(float)a.as.i / b.as.f);
     else if (a.type == TYPE_FLOAT && b.type == TYPE_INT)   push_float(s,a.as.f / (float)b.as.i);
+    else if (a.type == TYPE_CHAR && b.type == TYPE_CHAR)   push_char(s,a.as.c / b.as.c);
+    else if (a.type == TYPE_INT && b.type == TYPE_CHAR)    push_char(s,a.as.i / b.as.c);
+    else if (a.type == TYPE_CHAR && b.type == TYPE_INT)    push_char(s,a.as.c / b.as.i); 
     else {
         fprintf(stderr, "Type error: cannot add these types\n");
         exit(1);
@@ -126,6 +139,9 @@ void op_mul(Stack* s){
     else if (a.type == TYPE_FLOAT && b.type == TYPE_FLOAT) push_float(s,a.as.f * b.as.f);
     else if (a.type == TYPE_INT && b.type == TYPE_FLOAT)   push_float(s,(float)a.as.i * b.as.f);
     else if (a.type == TYPE_FLOAT && b.type == TYPE_INT)   push_float(s,a.as.f * (float)b.as.i);
+    else if (a.type == TYPE_CHAR && b.type == TYPE_CHAR)   push_char(s,a.as.c * b.as.c);
+    else if (a.type == TYPE_INT && b.type == TYPE_CHAR)    push_char(s,a.as.i * b.as.c);
+    else if (a.type == TYPE_CHAR && b.type == TYPE_INT)    push_char(s,a.as.c * b.as.i); 
     else {
         fprintf(stderr, "Type error: cannot add these types\n");
         exit(1);
@@ -143,9 +159,11 @@ void push_float(Stack* stack, float value) {
 void push_string(Stack* stack, const char* value) {
     push(stack, (Value){ .type = TYPE_STRING, .as.s = (char*)value });
 }
- 
 void push_bool(Stack* stack, bool value) {
     push(stack, (Value){ .type = TYPE_BOOL, .as.b = value });
+}
+void push_char(Stack* stack, char value) {
+    push(stack, (Value){ .type = TYPE_CHAR, .as.c = value });
 }
 void push_ptr(Stack* stack, Value* ptr) {
     push(stack, (Value){ .type = TYPE_PTR, .as.ptr = ptr });
@@ -241,6 +259,13 @@ void op_printf(Stack* stack) {
                     }
                     printf("%s", v.as.s);
                     break;
+                case 'c':
+                    if (v.type != TYPE_CHAR) {
+                        fprintf(stderr, "op_print: %%s expects a char\n");
+                        exit(1);
+                    }
+                    printf("%c", v.as.c);
+                    break;
                 case 'b':
                     if (v.type != TYPE_BOOL) {
                         fprintf(stderr, "op_print: %%b expects a bool\n");
@@ -315,6 +340,13 @@ void op_scanf(Stack* stack) {
                     }
                     scanf("%f", &(v.as.ptr->as.f));
                     break;
+                case 'c':
+                    if (v.as.ptr->type !=TYPE_FLOAT) {
+                        fprintf(stderr, "op_scanf: %%f expects a *char\n");
+                        exit(1);
+                    }
+                    scanf("%c", &(v.as.ptr->as.c));
+                    break;
                 case 's':
                     if (v.as.ptr->type !=TYPE_STRING) {
                         fprintf(stderr, "op_scanf: %%s expects a string\n");
@@ -340,20 +372,26 @@ void op_scanf(Stack* stack) {
         }
     }
 }
-void op_fgets(Stack* stack, int max_len) {
+void op_fgets(Stack* stack) {
+    // TODO: make to get stream from stack
+    
     Value ptr_value = pop(stack);
     if (ptr_value.type != TYPE_PTR) {
-        fprintf(stderr, "read_line: expected a pointer on the stack\n");
+        fprintf(stderr, "fgets: expected a pointer on the stack\n");
         exit(1);
     }
  
     Value* target = ptr_value.as.ptr;
     if (target->type != TYPE_STRING || target->as.s == NULL) {
-        fprintf(stderr, "read_line: target variable is not an allocated string buffer\n");
+        fprintf(stderr, "fgets: target variable is not an allocated string buffer\n");
         exit(1);
     }
- 
-    if (fgets(target->as.s, max_len, stdin) == NULL) {
+    Value int_val = pop(stack);
+    if (int_val.type != TYPE_INT) {
+        fprintf(stderr, "read_line: expected a integer on the stack\n");
+        exit(1);
+    }
+    if (fgets(target->as.s, int_val.as.i, stdin) == NULL) {
         target->as.s[0] = '\0'; 
         return;
     }
@@ -399,6 +437,9 @@ void op_equals(Stack* s){
     else if (a.type == TYPE_INT && b.type == TYPE_FLOAT)      push_bool(s,(float)a.as.i == b.as.f);
     else if (a.type == TYPE_FLOAT && b.type == TYPE_INT)      push_bool(s,a.as.f == (float)b.as.i);
     else if (a.type == TYPE_STRING && b.type == TYPE_STRING ) push_bool(s, compare_strings(a.as.s, b.as.s));
+    else if (a.type == TYPE_CHAR && b.type == TYPE_CHAR)      push_bool(s,a.as.c == b.as.c);
+    else if (a.type == TYPE_INT && b.type == TYPE_CHAR)       push_bool(s,a.as.i == b.as.c);
+    else if (a.type == TYPE_CHAR && b.type == TYPE_INT)       push_bool(s,a.as.c == b.as.i);
     else {
         fprintf(stderr, "Type error: cannot compare these types\n");
         exit(1);
@@ -413,6 +454,9 @@ void op_greater_equals(Stack* s){
     else if (a.type == TYPE_INT && b.type == TYPE_FLOAT)      push_bool(s,(float)a.as.i >= b.as.f);
     else if (a.type == TYPE_FLOAT && b.type == TYPE_INT)      push_bool(s,a.as.f >= (float)b.as.i);
     else if (a.type == TYPE_STRING && b.type == TYPE_STRING ) push_bool(s, compare_strings_leng(a.as.s, b.as.s));
+    else if (a.type == TYPE_CHAR && b.type == TYPE_CHAR)      push_bool(s,a.as.c >= b.as.c);
+    else if (a.type == TYPE_INT && b.type == TYPE_CHAR)       push_bool(s,a.as.i >= b.as.c);
+    else if (a.type == TYPE_CHAR && b.type == TYPE_INT)       push_bool(s,a.as.c >= b.as.i);
     else {
         fprintf(stderr, "Type error: cannot compare these types\n");
         exit(1);
@@ -427,6 +471,9 @@ void op_less_equals(Stack* s){
     else if (a.type == TYPE_INT && b.type == TYPE_FLOAT)      push_bool(s,(float)a.as.i <= b.as.f);
     else if (a.type == TYPE_FLOAT && b.type == TYPE_INT)      push_bool(s,a.as.f <= (float)b.as.i);
     else if (a.type == TYPE_STRING && b.type == TYPE_STRING ) push_bool(s, compare_strings_lenl(a.as.s, b.as.s));
+    else if (a.type == TYPE_CHAR && b.type == TYPE_CHAR)      push_bool(s,a.as.c <= b.as.c);
+    else if (a.type == TYPE_INT && b.type == TYPE_CHAR)       push_bool(s,a.as.i <= b.as.c);
+    else if (a.type == TYPE_CHAR && b.type == TYPE_INT)       push_bool(s,a.as.c <= b.as.i);
     else {
         fprintf(stderr, "Type error: cannot compare these types\n");
         exit(1);
@@ -440,10 +487,18 @@ bool is_truthy(Value v) {
         case TYPE_STRING: return v.as.s != NULL && v.as.s[0] != '\0';
         case TYPE_PTR:    return v.as.ptr != NULL;
         case TYPE_ARRAY:  return v.as.obj != NULL;
+        case TYPE_CHAR:   return v.as.c !='\0';
         default:          return false;
     }
 }
-ArrayObject* array_create(int capacity, ValueType elem_type) {
+ArrayObject* array_create(Stack* s, ValueType elem_type) {
+    Value a = pop(s);
+    
+    if(a.type != TYPE_INT){
+        fprintf(stderr, "array_create: expexted integer on top of the stack\n");
+        exit(1);
+    }
+    int capacity = a.as.i;
     if (capacity <= 0) {
         fprintf(stderr, "array_create: capacity must be positive\n");
         exit(1);
@@ -513,4 +568,13 @@ void op_arr_set(Stack* stack) {
     ArrayObject* arr = (ArrayObject*)arr_v.as.obj;
     array_set(arr, idx_v.as.i, value);
      //TODO: Make avaliable for strings
+}
+void* alloc_string(Stack* stack) {
+    Value a = pop(stack);
+
+    if (a.type != TYPE_INT){
+        fprintf(stderr, "alloc_string: expected an int on top of the stack\n");
+        exit(1);
+    }
+    return malloc(a.as.i+1);
 }

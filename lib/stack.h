@@ -11,7 +11,8 @@ typedef enum {
     TYPE_STRING,
     TYPE_BOOL,
     TYPE_ARRAY,
-    TYPE_PTR
+    TYPE_PTR,
+    TYPE_CHAR
 } ValueType;
  
 
@@ -23,6 +24,7 @@ typedef struct Value{
         char* s;
         bool  b;
         void* obj;
+        char  c;
 	    struct Value* ptr;
     } as;
 }Value;
@@ -52,6 +54,7 @@ void push_int(Stack* stack, int value);
 void push_float(Stack* stack, float value);
 void push_string(Stack* stack, const char* value);
 void push_bool(Stack* stack, bool value);
+void push_char(Stack* stack, char  value);
 void push_ptr(Stack* stack, Value* ptr);
 
 void op_deref(Stack* stack);
@@ -62,7 +65,7 @@ void op_arr_set(Stack* stack);
 
 void op_printf(Stack* stack);
 void op_scanf(Stack* stack);
-void op_fgets(Stack* stack, int max_len);
+void op_fgets(Stack* stack);
 void op_sizeof(Stack* stack);
 void op_strlen(Stack* stack);
    
@@ -75,8 +78,9 @@ void op_equals(Stack* s);
 void op_greater_equals(Stack* s);
 void op_less_equals(Stack* s);
 
-ArrayObject* array_create(int capacity, ValueType elem_type);
+ArrayObject* array_create(Stack* s, ValueType elem_type);
 Value array_get(ArrayObject* arr, int index);
 void  array_set(ArrayObject* arr, int index, Value v);
+void*  alloc_string(Stack* s);
 
 #endif // STACK_H

@@ -67,7 +67,7 @@ func mul_array_with_num{
 
 func main{
      "Hello world\n" printf
-     let int nums [5]
+     5 let [int] nums
      nums deref print_array
      10 nums deref fill_array_with_num
      nums deref print_array

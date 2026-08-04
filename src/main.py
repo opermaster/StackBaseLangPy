@@ -10,6 +10,7 @@ class State(Enum):
     InLit     = 4
     InEquals  = 5 # for == => =<
     InComment = 6
+    InChar    = 7
 
 class TokenType(Enum):
     Int = 1
@@ -23,12 +24,14 @@ class TokenType(Enum):
     SOParen = 9  # [
     SCParen = 10 # ]
     Comment = 11 #/* */
+    Char    = 12
     
 TYPE_MAP = {
     "int":    ("TYPE_INT",    "0",     "i"),
     "float":  ("TYPE_FLOAT",  "0.0f",  "f"),
     "string": ("TYPE_STRING", "NULL",  "s"),
-    "bool":   ("TYPE_BOOL",   "false" ,"b"),
+    "bool":   ("TYPE_BOOL",   "false", "b"),
+    "char":   ("TYPE_CHAR",   "\' \'", "c"),
     "array":  ("TYPE_ARRAY",  "NULL",  "obj"),
 }
 
@@ -39,9 +42,7 @@ def tokenize(program):
     ttype  = TokenType.Lit
 
     i = 0
-
-    
-                 
+        
     while (i< len(program)):
         c = program[i]
             
@@ -54,6 +55,10 @@ def tokenize(program):
                 elif c=='\"':
                     ttype = TokenType.Str
                     state = State.InStr
+                elif c=='\'':
+                    ttype = TokenType.Char
+                    state = State.InChar
+                    
                 elif c=="/" and i+1!=len(program) and program[i+1] =='*':
                     ttype = TokenType.Comment
                     state = State.InComment
@@ -162,6 +167,15 @@ def tokenize(program):
                     ttype = TokenType.Lit
 
                 state = State.Start
+            case State.InChar:
+                if c=='\'':
+                    state = State.Start
+                    tokens.append((ttype,value))
+                    value = ""
+                    ttype = TokenType.Lit
+                    i+=1
+                else:
+                    value +=c
         i+=1
     if value != "":
         tokens.append((ttype,value))
@@ -199,6 +213,9 @@ def compile_tokens(tokens,file_path):
                 case TokenType.Float:
                     file.write(f"//PUSH FLOAT  `\"{token[1]}\"`\n")
                     file.write(f"{indent}push_float(s,{token[1]}f);\n")
+                case TokenType.Char:
+                    file.write(f"//PUSH CHAR  `\"{token[1]}\"`\n")
+                    file.write(f"{indent}push_char(s,\'{token[1]}\');\n")
                 case TokenType.Comment:
                     file.write(f"{token[1]}\n")
                 case TokenType.Lit:
@@ -236,12 +253,13 @@ def compile_tokens(tokens,file_path):
                         case "scanf":
                             file.write(f"//SCANF\n")
                             file.write(f"{indent}op_scanf(s);\n")
+                            
                         case "fgets":
-                            if last_var_name is None or last_var_name not in var_sizes:
-                                raise SyntaxError("read: before 'fgets' must be variable array ('buf fgets')")
-                            size = var_sizes[last_var_name]
+                            if last_var_name is None:
+                                raise SyntaxError(f"{file_path}: read: before 'fgets' must be variable array ('buf fgets')")
                             file.write(f"//fgets into {last_var_name}\n")
-                            file.write(f"{indent}op_fgets(s, {size});\n")
+                            file.write(f"{indent}op_fgets(s);\n")
+                            
                         case "sizeof":
                             type_name = tokens[i + 1][1]
                             sizes = {"int": 4, "float": 4, "bool": 1, "string": 8}
@@ -254,41 +272,48 @@ def compile_tokens(tokens,file_path):
                              file.write(f"{indent}op_strlen(s);\n")
                              
                         case "let":
-                            type_name = tokens[i + 1][1]
-                            var_name = tokens[i + 2][1]
                             isarray = False
-                            c_type_enum, default_val, field = TYPE_MAP[type_name]
-                            
-                            if type_name not in TYPE_MAP:
-                                raise SyntaxError(f"Unknown type '{type_name}' in let")
-                            if tokens[i+3][0]==TokenType.SOParen:
+                            if tokens[i+1][0]==TokenType.SOParen:
                                 isarray = True
                                 
                             if isarray:
-                                array_size = int(tokens[i + 4][1])
+                                type_name = tokens[i + 2][1]
+                                
+                                if tokens[i+3][0]!=TokenType.SCParen:
+                                    raise SyntaxError(f"{file_path}: Expexted `]` after type, in array declaration!")
+                                
+                                var_name = tokens[i + 4][1]
+                                c_type_enum, default_val, field = TYPE_MAP[type_name]
+                                
+                                if type_name not in TYPE_MAP:
+                                    raise SyntaxError(f"{file_path}: Unknown type '{type_name}' in let")
 
                                 if c_type_enum == "TYPE_STRING":
                                     
-                                    file.write(f"//LET {type_name} {var_name}[{array_size}]\n")
+                                    file.write(f"//LET [{type_name}] {var_name}\n")
                                     file.write(
                                         f"{indent}Value {var_name} = (Value){{ .type = TYPE_STRING, "
-                                        f".as.s = malloc({array_size} + 1) }};\n"
+                                        f".as.s = alloc_string(s)}};\n"
                                     )
                                     file.write(f"{indent}{var_name}.as.s[0] = '\\0';\n")
 
                                     declared_vars.add(var_name)
-                                    var_sizes[var_name] = array_size  # buffer size for  "read"
                                 else:
-                                    file.write(f"//LET {type_name} {var_name}[{array_size}] (array)\n")
+                                    file.write(f"//LET [{type_name}] {var_name}\n")
                                     file.write(
                                         f"{indent}Value {var_name} = (Value){{ .type = TYPE_ARRAY, "
-                                        f".as.obj = array_create({array_size}, {c_type_enum}) }};\n"
+                                        f".as.obj = array_create(s, {c_type_enum}) }};\n"
                                     )
-                                    var_sizes[var_name] = array_size
                                     declared_vars.add(var_name)
-                                i += 6  # let, type, name, '[', size, ']'
+                                i += 5  # let, '[', type, ']',  name,
                                 continue
-
+                            type_name = tokens[i + 1][1] 
+                            var_name = tokens[i + 2][1]
+                            c_type_enum, default_val, field = TYPE_MAP[type_name]
+                                
+                            if type_name not in TYPE_MAP:
+                                raise SyntaxError(f"{file_path}: Unknown type '{type_name}' in let")
+                            
                             file.write(f"//LET {type_name} {var_name}\n")
                             file.write(
                                 f"{indent}Value {var_name} = (Value){{ .type = {c_type_enum}, "
@@ -352,7 +377,7 @@ def compile_tokens(tokens,file_path):
                                 file.write(f"//FUNC CALL `{token[1]}`\n")
                                 file.write(f"{indent}{token[1]}(s);\n")
                             else:
-                                raise SyntaxError(f"Unknown literal: `{token[1]}`")
+                                raise SyntaxError(f"{file_path}: Unknown literal: `{token[1]}`")
                             
             i+=1
 def compile_file(input_path: str, output_path: str, verbose: bool = False):
