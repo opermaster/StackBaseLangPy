@@ -19,6 +19,7 @@ func fill_array{
     let int len
     let array nums
     let int i
+    nums store
     nums deref sizeof len store
     len deref 1 - len store
     while {
@@ -64,7 +65,6 @@ func mul_array_with_num{
         i deref 1 + i store
     }
 }
-
 func main{
      "Hello world\n" printf
      5 let [int] nums

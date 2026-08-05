@@ -1,0 +1,158 @@
+func print_array{
+    /* array */
+    let int len
+    let array nums
+    let int i
+    nums store
+    nums deref sizeof len store
+    len deref 1 - len store
+    while {
+        i deref len deref =<
+        do
+        nums deref i deref arr_get
+        "%c " printf
+        i deref 1 + i store
+    }
+    "\n" printf
+}
+func calculate_next_row{
+    let array row1
+    let array row2
+    let int len
+    let int i
+        
+    row2 store
+    row1 store
+    1 i store   
+    row1 deref sizeof len store
+    len deref 2 - len store
+
+    while{
+        i deref len deref =< do
+        let char left
+        let char cent
+        let char right
+        
+        row1 deref i deref 1 - arr_get left store 
+        row1 deref i deref arr_get     cent store 
+        row1 deref i deref 1 + arr_get right store 
+
+        left deref '*' == cent deref '*' == right deref '*' == and and if{
+
+             row2 deref i deref ' '  arr_set
+        }
+        
+        left deref '*' == cent deref '*' == right deref ' ' == and and if{
+
+             row2 deref i deref '*'  arr_set
+        }
+        
+        left deref '*' == cent deref ' ' == right deref '*' == and and if{
+
+             row2 deref i deref '*'  arr_set
+        }
+        
+        left deref '*' == cent deref ' ' == right deref ' ' == and and if{
+
+             row2 deref i deref ' '  arr_set
+        }
+        
+        left deref ' ' == cent deref '*' == right deref '*' == and and if{
+
+             row2 deref i deref '*' arr_set
+        }
+        left deref ' ' == cent deref '*' == right deref ' ' == and and if{
+
+             row2 deref i deref '*'  arr_set
+        }
+        left deref ' ' == cent deref ' ' == right deref '*' == and and if{
+ 
+             row2 deref  i deref '*' arr_set
+        }
+        left deref ' ' == cent deref ' ' == right deref ' ' == and and if{
+
+             row2 deref i deref ' '  arr_set
+        }
+        i deref 1 + i store
+        
+    }
+    row2 deref
+}
+func swap_rows{
+    let array row1
+    let array row2
+    let array temp
+               
+    row2 store
+    row1 store
+        
+    row2 deref temp store 
+    row1 deref row2 store
+    temp deref row1 store
+        
+    row2 deref
+    row1 deref
+}
+func main{
+    let int size
+    30 size store
+    size deref let [char] row1
+    size deref let [char] row2
+    row2 deref  0 ' ' arr_set
+    row2 deref  size deref 1 - '*' arr_set
+    
+    row1 deref print_array
+    row1 deref  0 '*' arr_set
+    row1 deref  1 '*' arr_set
+    row1 deref  2 ' ' arr_set
+    row1 deref  3 '*' arr_set
+    row1 deref  4 ' ' arr_set
+    row1 deref  5 ' ' arr_set
+    row1 deref  6 ' ' arr_set
+    row1 deref  7 ' ' arr_set
+    row1 deref  8 '*' arr_set
+    row1 deref  9 ' ' arr_set
+    row1 deref 10 ' ' arr_set
+    row1 deref 11 '*' arr_set
+    row1 deref 12 ' ' arr_set
+    row1 deref 13 ' ' arr_set
+    row1 deref 14 ' ' arr_set
+    row1 deref 15 '*' arr_set
+    row1 deref 16 ' ' arr_set
+    row1 deref 17 ' ' arr_set
+    row1 deref 18 ' ' arr_set
+    row1 deref 19 ' ' arr_set
+    row1 deref 20 ' ' arr_set
+    row1 deref 21 '*' arr_set
+    row1 deref 22 ' ' arr_set
+    row1 deref 23 ' ' arr_set
+    row1 deref 24 ' ' arr_set
+    row1 deref 25 ' ' arr_set
+    row1 deref 26 ' ' arr_set
+    row1 deref 27 ' ' arr_set
+    row1 deref 28 '*' arr_set
+    row1 deref 29 '*' arr_set
+
+    let int i
+    while{
+        i deref  150 =< do
+        row1 deref row2 deref calculate_next_row row2 store
+        row1 deref print_array
+        row1 deref row2 deref swap_rows row1 store row2 store
+        i deref 1 + i store
+    }
+    
+    /*row1 deref 1 'b' arr_set
+        
+    row2 deref 0 'c' arr_set
+    row2 deref 1 'd' arr_set
+        
+    row1 deref print_array
+    row2 deref print_array
+
+    
+        
+    row1 deref print_array
+    row2 deref print_array*/
+       
+}

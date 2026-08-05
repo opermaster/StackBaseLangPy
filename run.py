@@ -52,6 +52,7 @@ FILES = [
     "9-functions",
     "10-funcs-params-arrays",
     "11-strlen-sizeof",
+    "12-rule110"
 ]
 
 TIMEOUT = 5  # seconds. Prevents programs waiting for input (with no inputs file) from hanging tests

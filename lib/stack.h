@@ -77,6 +77,7 @@ void op_mul(Stack* s);
 void op_equals(Stack* s);
 void op_greater_equals(Stack* s);
 void op_less_equals(Stack* s);
+void op_and(Stack* s);
 
 ArrayObject* array_create(Stack* s, ValueType elem_type);
 Value array_get(ArrayObject* arr, int index);

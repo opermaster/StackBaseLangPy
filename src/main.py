@@ -241,6 +241,9 @@ def compile_tokens(tokens,file_path):
                         case "=>":
                             file.write(f"//GREATER EQUALS\n")
                             file.write(f"{indent}op_greater_equals(s);\n")
+                        case "and":
+                            file.write(f"//AND\n")
+                            file.write(f"{indent}op_and(s);\n")
                         case "{":
                             file.write(indent+token[1]+'\n')
                             indent+='\t'
@@ -349,8 +352,8 @@ def compile_tokens(tokens,file_path):
                             file.write(f"{indent}while (1)")
                         case "do":
                             file.write("//DO\n")
-                            file.write(f"{indent}Value __cond{cond_counter} = pop(s);\n")
-                            file.write(f"{indent}if (!is_truthy(__cond{cond_counter})) break;\n")
+                            file.write(f"{indent}Value __do_cond{cond_counter} = pop(s);\n")
+                            file.write(f"{indent}if (!is_truthy(__do_cond{cond_counter})) break;\n")
                             cond_counter += 1
                         case "retzero":
                             file.write(f"{indent}RETZERO;\n")

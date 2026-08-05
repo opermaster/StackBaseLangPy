@@ -440,8 +440,9 @@ void op_equals(Stack* s){
     else if (a.type == TYPE_CHAR && b.type == TYPE_CHAR)      push_bool(s,a.as.c == b.as.c);
     else if (a.type == TYPE_INT && b.type == TYPE_CHAR)       push_bool(s,a.as.i == b.as.c);
     else if (a.type == TYPE_CHAR && b.type == TYPE_INT)       push_bool(s,a.as.c == b.as.i);
+    else if (a.type == TYPE_BOOL && b.type == TYPE_BOOL)      push_bool(s,a.as.b == b.as.b);
     else {
-        fprintf(stderr, "Type error: cannot compare these types\n");
+        fprintf(stderr, "==: Type error: cannot compare these types\n");
         exit(1);
     }
 }
@@ -458,7 +459,7 @@ void op_greater_equals(Stack* s){
     else if (a.type == TYPE_INT && b.type == TYPE_CHAR)       push_bool(s,a.as.i >= b.as.c);
     else if (a.type == TYPE_CHAR && b.type == TYPE_INT)       push_bool(s,a.as.c >= b.as.i);
     else {
-        fprintf(stderr, "Type error: cannot compare these types\n");
+        fprintf(stderr, "=>: Type error: cannot compare these types\n");
         exit(1);
     }
 }
@@ -475,7 +476,21 @@ void op_less_equals(Stack* s){
     else if (a.type == TYPE_INT && b.type == TYPE_CHAR)       push_bool(s,a.as.i <= b.as.c);
     else if (a.type == TYPE_CHAR && b.type == TYPE_INT)       push_bool(s,a.as.c <= b.as.i);
     else {
-        fprintf(stderr, "Type error: cannot compare these types\n");
+        fprintf(stderr, "=<: Type error: cannot compare these types\n");
+        exit(1);
+    }
+}
+void op_and(Stack* s){
+    Value b = pop(s); 
+    Value a = pop(s);
+    
+    if (a.type == TYPE_INT && b.type == TYPE_INT)             push_bool(s,a.as.i && b.as.i);
+    else if (a.type == TYPE_FLOAT && b.type == TYPE_FLOAT)    push_bool(s,a.as.f && b.as.f);
+    else if (a.type == TYPE_INT && b.type == TYPE_FLOAT)      push_bool(s,(float)a.as.i && b.as.f);
+    else if (a.type == TYPE_FLOAT && b.type == TYPE_INT)      push_bool(s,a.as.f && (float)b.as.i);
+    else if (a.type == TYPE_BOOL && b.type == TYPE_BOOL)      push_bool(s,a.as.b && b.as.b);
+    else {
+        fprintf(stderr, "AND: Type error: cannot compare these types\n");
         exit(1);
     }
 }
@@ -555,7 +570,8 @@ void op_arr_set(Stack* stack) {
     Value value = pop(stack);
     Value idx_v = pop(stack);
     Value arr_v = pop(stack);
- 
+    
+
     if (arr_v.type != TYPE_ARRAY) {
         fprintf(stderr, "op_arr_set: expected an array on the stack (did you forget 'deref'?)\n");
         exit(1);
