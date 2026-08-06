@@ -11,7 +11,7 @@ func print_array{
     while {
         i deref len deref =<
         do
-        nums deref i deref arr_get
+        nums deref i deref get deref 
         "%d " printf
         i deref 1 + i store
     }

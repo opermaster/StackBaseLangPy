@@ -12,7 +12,8 @@ typedef enum {
     TYPE_BOOL,
     TYPE_ARRAY,
     TYPE_PTR,
-    TYPE_CHAR
+    TYPE_CHAR,
+    TYPE_CHAR_PTR
 } ValueType;
  
 
@@ -60,8 +61,7 @@ void push_ptr(Stack* stack, Value* ptr);
 void op_deref(Stack* stack);
 void op_store(Stack* stack);
 
-void op_arr_get(Stack* stack);
-void op_arr_set(Stack* stack);
+void op_get(Stack* stack);
 
 void op_printf(Stack* stack);
 void op_scanf(Stack* stack);
@@ -77,7 +77,10 @@ void op_mul(Stack* s);
 void op_equals(Stack* s);
 void op_greater_equals(Stack* s);
 void op_less_equals(Stack* s);
+void op_greater(Stack* s);
+void op_less(Stack* s);
 void op_and(Stack* s);
+void op_or(Stack* s);
 
 ArrayObject* array_create(Stack* s, ValueType elem_type);
 Value array_get(ArrayObject* arr, int index);

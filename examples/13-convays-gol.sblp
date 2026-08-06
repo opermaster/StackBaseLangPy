@@ -1,0 +1,142 @@
+func swap_rows{
+    let array row1
+    let array row2
+    let array temp
+               
+    row2 store
+    row1 store
+        
+    row2 deref temp store 
+    row1 deref row2 store
+    temp deref row1 store
+        
+    row2 deref
+    row1 deref
+}
+func print_board{
+     let array board
+     board store
+     let int width
+     width store
+     let int height
+     height store
+     
+     let int x
+     let int y
+
+     while{
+        y deref height deref < do
+        0 x store
+        while{
+            x deref height deref < do
+
+            board deref y deref width deref * x deref + get deref
+            
+            if{
+                "|*" printf
+            } else{
+                "| " printf
+            }
+            
+            x deref 1 + x store
+        }
+        "\n" printf
+        y deref 1 + y store
+     }    
+}
+func calculate_new_board{
+     let array board
+     board store
+     let int width
+     width store
+     let int height
+     height store
+       
+     width deref height deref * let [bool] board2
+     
+     let int x
+     let int y
+     1 x store
+     1 y store
+
+     let int counter
+     let int i
+     while{
+        y deref height deref 1 -  < do
+        1 x store
+        while{
+            x deref width deref 1 - < do
+            
+            board deref y deref 1 - width deref * x deref 1 - + get deref 
+            board deref y deref 1 - width deref * x deref     + get deref
+            board deref y deref 1 - width deref * x deref 1 + + get deref
+
+            board deref y deref  width deref * x deref 1 - + get deref
+            
+            board deref y deref  width deref * x deref 1 + + get deref
+
+            board deref y deref 1 + width deref * x deref 1 -  + get deref
+            board deref y deref 1 + width deref * x deref      + get deref
+            board deref y deref 1 + width deref * x deref 1 +  + get deref
+            while{
+                i deref 8 < do
+                if {
+                  counter deref 1 + counter store
+                }
+                i deref 1 + i store
+            }
+            board deref y deref width deref * x deref + get deref 
+            
+            if{
+                counter deref  2 == counter deref 3 == or if{
+                        1 1 == board2 deref y deref width deref * x deref + get store
+                } else {
+                        1 2 == board2 deref y deref width deref * x deref + get store
+                }
+                
+            } else{
+                counter deref 3 == if{
+                        1 1 == board2 deref y deref width deref * x deref + get store
+                }
+            }
+            
+            0 i store
+            0 counter store
+            
+            
+            x deref 1 + x store
+        }
+        y deref 1 + y store
+     } 
+     board2 deref
+}
+func main{
+     let int width
+     30 width store
+     let int height
+     30 height store
+     
+     width deref height deref * let [bool] board1
+
+     1 board1 deref 5 width deref * 5 + get store
+     1 board1 deref 5 width deref * 6 + get store
+     1 board1 deref 6 width deref * 6 + get store
+     1 board1 deref 4 width deref * 7 + get store
+
+     1 board1 deref 10 width deref * 5 + get store
+     1 board1 deref 10 width deref * 6 + get store
+     1 board1 deref 10 width deref * 7 + get store
+     1 board1 deref 9 width deref *  7 + get store
+     1 board1 deref 8 width deref *  6 + get store
+     
+     let int i
+     while{
+        i deref 2 < do
+        "\e[1;1H\e[2J" printf
+        height deref  width deref board1 deref print_board
+        height deref  width deref board1 deref calculate_new_board board1 store
+        i deref 1 + i store
+     }
+    
+
+}

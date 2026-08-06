@@ -9,7 +9,7 @@ func print_array{
     while {
         i deref len deref =<
         do
-        nums deref i deref arr_get
+        nums deref i deref get deref
         "%d " printf
         i deref 1 + i store
     }
@@ -25,7 +25,7 @@ func fill_array{
     while {
         i deref len deref =<
         do
-        nums deref i deref i deref arr_set
+        i deref nums deref i deref get store
         i deref 1 + i store
     }
 }
@@ -43,7 +43,7 @@ func fill_array_with_num{
     while {
         i deref len deref =<
         do
-        nums deref i deref num deref arr_set
+        num deref nums deref i deref get store
         i deref 1 + i store
     }
 }
@@ -61,7 +61,8 @@ func mul_array_with_num{
     while {
         i deref len deref =<
         do
-        nums deref i deref  nums deref i deref arr_get num deref *  arr_set
+        nums deref i deref get deref num deref * nums deref i deref get store
+        /*nums deref i deref  nums deref i deref arr_get num deref *  arr_set*/
         i deref 1 + i store
     }
 }

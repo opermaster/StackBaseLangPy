@@ -241,9 +241,18 @@ def compile_tokens(tokens,file_path):
                         case "=>":
                             file.write(f"//GREATER EQUALS\n")
                             file.write(f"{indent}op_greater_equals(s);\n")
+                        case "<":
+                            file.write(f"//LESS\n")
+                            file.write(f"{indent}op_less(s);\n")
+                        case ">":
+                            file.write(f"//GREATER\n")
+                            file.write(f"{indent}op_greater(s);\n")
                         case "and":
                             file.write(f"//AND\n")
                             file.write(f"{indent}op_and(s);\n")
+                        case "or":
+                            file.write(f"//OR\n")
+                            file.write(f"{indent}op_or(s);\n")
                         case "{":
                             file.write(indent+token[1]+'\n')
                             indent+='\t'
@@ -291,23 +300,12 @@ def compile_tokens(tokens,file_path):
                                 if type_name not in TYPE_MAP:
                                     raise SyntaxError(f"{file_path}: Unknown type '{type_name}' in let")
 
-                                if c_type_enum == "TYPE_STRING":
-                                    
-                                    file.write(f"//LET [{type_name}] {var_name}\n")
-                                    file.write(
-                                        f"{indent}Value {var_name} = (Value){{ .type = TYPE_STRING, "
-                                        f".as.s = alloc_string(s)}};\n"
-                                    )
-                                    file.write(f"{indent}{var_name}.as.s[0] = '\\0';\n")
-
-                                    declared_vars.add(var_name)
-                                else:
-                                    file.write(f"//LET [{type_name}] {var_name}\n")
-                                    file.write(
-                                        f"{indent}Value {var_name} = (Value){{ .type = TYPE_ARRAY, "
-                                        f".as.obj = array_create(s, {c_type_enum}) }};\n"
-                                    )
-                                    declared_vars.add(var_name)
+                                file.write(f"//LET [{type_name}] {var_name}\n")
+                                file.write(
+                                    f"{indent}Value {var_name} = (Value){{ .type = TYPE_ARRAY, "
+                                    f".as.obj = array_create(s, {c_type_enum}) }};\n"
+                                )
+                                declared_vars.add(var_name)
                                 i += 5  # let, '[', type, ']',  name,
                                 continue
                             type_name = tokens[i + 1][1] 
@@ -316,22 +314,28 @@ def compile_tokens(tokens,file_path):
                                 
                             if type_name not in TYPE_MAP:
                                 raise SyntaxError(f"{file_path}: Unknown type '{type_name}' in let")
-                            
-                            file.write(f"//LET {type_name} {var_name}\n")
-                            file.write(
-                                f"{indent}Value {var_name} = (Value){{ .type = {c_type_enum}, "
-                                f".as.{field} = {default_val} }};\n"
-                            )
+                            if c_type_enum == "TYPE_STRING":
+                                    
+                                    file.write(f"//LET {type_name} {var_name}\n")
+                                    file.write(
+                                        f"{indent}Value {var_name} = (Value){{ .type = TYPE_STRING, "
+                                        f".as.s = alloc_string(s)}};\n"
+                                    )
 
-                            declared_vars.add(var_name)
+                                    declared_vars.add(var_name)
+                            else:
+                                file.write(f"//LET {type_name} {var_name}\n")
+                                file.write(
+                                    f"{indent}Value {var_name} = (Value){{ .type = {c_type_enum}, "
+                                    f".as.{field} = {default_val} }};\n"
+                                )
+
+                                declared_vars.add(var_name)
                             i += 3
                             continue
-                        case "arr_get":
-                            file.write(f"{indent}//ARR_GET\n")
-                            file.write(f"{indent}op_arr_get(s);\n")
-                        case "arr_set":
-                            file.write(f"{indent}//ARR_SET\n")
-                            file.write(f"{indent}op_arr_set(s);\n")
+                        case "get":
+                            file.write(f"{indent}//GET\n")
+                            file.write(f"{indent}op_get(s);\n")
                         case "store":
                             file.write(f"//STORE\n")
                             file.write(f"{indent}op_store(s);\n")
@@ -365,7 +369,7 @@ def compile_tokens(tokens,file_path):
                                 file.write(f"{indent}int {func_name}(){{\n")
                                 i+=1 # SKIPPING `{`
                                 indent +='\t'
-                                file.write("\tStack __stack_storage = {0};\nStack* s = &__stack_storage;\n\tstack_init(s);\n")
+                                file.write("\tStack __stack_storage = {0};\n\tStack* s = &__stack_storage;\n\tstack_init(s);\n")
                                 file.write("\t//MAIN BODY\n")
                             else:
                                 file.write(f"{indent}void {func_name}(Stack* s)")

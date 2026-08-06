@@ -9,7 +9,7 @@ func print_array{
     while {
         i deref len deref =<
         do
-        nums deref i deref arr_get
+        nums deref i deref get deref
         "%c " printf
         i deref 1 + i store
     }
@@ -33,45 +33,45 @@ func calculate_next_row{
         let char cent
         let char right
         
-        row1 deref i deref 1 - arr_get left store 
-        row1 deref i deref arr_get     cent store 
-        row1 deref i deref 1 + arr_get right store 
+        row1 deref i deref 1 - get deref left store 
+        row1 deref i deref get deref     cent store 
+        row1 deref i deref 1 + get deref right store 
 
         left deref '*' == cent deref '*' == right deref '*' == and and if{
 
-             row2 deref i deref ' '  arr_set
+            ' ' row2 deref i deref get store
         }
         
         left deref '*' == cent deref '*' == right deref ' ' == and and if{
 
-             row2 deref i deref '*'  arr_set
+             '*' row2 deref i deref get store
         }
         
         left deref '*' == cent deref ' ' == right deref '*' == and and if{
 
-             row2 deref i deref '*'  arr_set
+             '*' row2 deref i deref get store
         }
         
         left deref '*' == cent deref ' ' == right deref ' ' == and and if{
 
-             row2 deref i deref ' '  arr_set
+             ' ' row2 deref i deref  get store
         }
         
         left deref ' ' == cent deref '*' == right deref '*' == and and if{
 
-             row2 deref i deref '*' arr_set
+            '*'  row2 deref i deref   get store
         }
         left deref ' ' == cent deref '*' == right deref ' ' == and and if{
 
-             row2 deref i deref '*'  arr_set
+            '*'  row2 deref i deref  get store
         }
         left deref ' ' == cent deref ' ' == right deref '*' == and and if{
  
-             row2 deref  i deref '*' arr_set
+             '*' row2 deref  i deref  get store
         }
         left deref ' ' == cent deref ' ' == right deref ' ' == and and if{
 
-             row2 deref i deref ' '  arr_set
+             ' ' row2 deref i deref  get store
         }
         i deref 1 + i store
         
@@ -98,40 +98,40 @@ func main{
     30 size store
     size deref let [char] row1
     size deref let [char] row2
-    row2 deref  0 ' ' arr_set
-    row2 deref  size deref 1 - '*' arr_set
+    ' ' row2 deref  0  get store
+    '*' row2 deref  size deref 1 - get store
     
     row1 deref print_array
-    row1 deref  0 '*' arr_set
-    row1 deref  1 '*' arr_set
-    row1 deref  2 ' ' arr_set
-    row1 deref  3 '*' arr_set
-    row1 deref  4 ' ' arr_set
-    row1 deref  5 ' ' arr_set
-    row1 deref  6 ' ' arr_set
-    row1 deref  7 ' ' arr_set
-    row1 deref  8 '*' arr_set
-    row1 deref  9 ' ' arr_set
-    row1 deref 10 ' ' arr_set
-    row1 deref 11 '*' arr_set
-    row1 deref 12 ' ' arr_set
-    row1 deref 13 ' ' arr_set
-    row1 deref 14 ' ' arr_set
-    row1 deref 15 '*' arr_set
-    row1 deref 16 ' ' arr_set
-    row1 deref 17 ' ' arr_set
-    row1 deref 18 ' ' arr_set
-    row1 deref 19 ' ' arr_set
-    row1 deref 20 ' ' arr_set
-    row1 deref 21 '*' arr_set
-    row1 deref 22 ' ' arr_set
-    row1 deref 23 ' ' arr_set
-    row1 deref 24 ' ' arr_set
-    row1 deref 25 ' ' arr_set
-    row1 deref 26 ' ' arr_set
-    row1 deref 27 ' ' arr_set
-    row1 deref 28 '*' arr_set
-    row1 deref 29 '*' arr_set
+    '*' row1 deref  0  get store
+    '*' row1 deref  1  get store
+    ' ' row1 deref  2  get store
+    '*' row1 deref  3  get store
+    ' ' row1 deref  4  get store
+    ' ' row1 deref  5  get store
+    ' ' row1 deref  6  get store
+    ' ' row1 deref  7  get store
+    '*' row1 deref  8  get store
+    ' ' row1 deref  9  get store
+    ' ' row1 deref 10  get store
+    '*' row1 deref 11  get store
+    ' ' row1 deref 12  get store
+    ' ' row1 deref 13  get store
+    ' ' row1 deref 14  get store
+    '*' row1 deref 15  get store
+    ' ' row1 deref 16  get store
+    ' ' row1 deref 17  get store
+    ' ' row1 deref 18  get store
+    ' ' row1 deref 19  get store
+    ' ' row1 deref 20  get store
+    '*' row1 deref 21  get store
+    ' ' row1 deref 22  get store
+    ' ' row1 deref 23 get store
+    ' ' row1 deref 24 get store
+    ' ' row1 deref 25 get store
+    ' ' row1 deref 26 get store
+    ' ' row1 deref 27 get store
+    '*' row1 deref 28 get store
+    '*' row1 deref 29 get store
 
     let int i
     while{
@@ -149,8 +149,6 @@ func main{
         
     row1 deref print_array
     row2 deref print_array
-
-    
         
     row1 deref print_array
     row2 deref print_array*/
